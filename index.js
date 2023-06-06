@@ -1,10 +1,7 @@
 import { ethers } from 'ethers'
-import dotenv from 'dotenv'
 import config from './config.js'
 import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer, getCollectionName } from './openSea.js'
 import { getTrimmedPriceInWei } from './utils.js'
-
-dotenv.config()
 
 const { provider, privateKey } = config
 const signer = new ethers.Wallet(privateKey, provider)
@@ -15,8 +12,15 @@ if (!slug) {
     process.exit(1)
 }
 
-const margin = Number(process.argv[3])
-const increment = Number(process.argv[4])
+let margin = Number(process.argv[3])
+if (!margin) {
+    margin = 0.15 // 15% margin default
+}
+
+let increment = Number(process.argv[4])
+if (!increment) {
+    increment = 0.01 // 1% increment default
+}
 
 async function main() {
 
