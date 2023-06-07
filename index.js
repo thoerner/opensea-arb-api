@@ -23,50 +23,66 @@ if (!increment) {
 }
 
 async function main() {
+    const maxAttempts = 5; // Maximum number of attempts
+    let attempt = 0;
 
-    console.log(`Collection: ${await getCollectionName(slug)}`)
-    console.log(`Margin: ${margin}`)
-    console.log(`Bid Increment: ${increment}`)
-    
-    const { highestOffer, floorPrice } = await getFloorAndOffer(slug)
+    while(attempt < maxAttempts) {
+        try {
+            console.log(`Collection: ${await getCollectionName(slug)}`);
+            console.log(`Margin: ${margin}`);
+            console.log(`Bid Increment: ${increment}`);
 
-    console.log(`highestOffer: ${highestOffer}`)
-    console.log(`floorPrice: ${floorPrice}`)
-    
-    if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
-        console.log('Offer too close to floor. Not posting.')
-        return
+            const { highestOffer, floorPrice } = await getFloorAndOffer(slug);
+
+            console.log(`highestOffer: ${highestOffer}`);
+            console.log(`floorPrice: ${floorPrice}`);
+        
+            if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
+                console.log('Offer too close to floor. Not posting.');
+                return;
+            }
+
+            const priceWei = getTrimmedPriceInWei(highestOffer, increment);
+            const price = ethers.BigNumber.from(priceWei) / 10 ** 18;
+
+            console.log(`Building offer for ${price}...`);
+            const collectionOffer = await buildCollectionOffer({
+                collectionSlug: slug,
+                quantity: 1,
+                priceWei: priceWei,
+                expirationSeconds: BigInt(830),
+            });
+
+            console.log(`Signing offer...`);
+            const collectionSignature = await signOffer(signer, collectionOffer);
+
+            console.log(`Posting offer...`);
+            const collectionResponse = await postCriteriaOffer(
+                slug,
+                collectionOffer,
+                collectionSignature,
+            );
+
+            if (collectionResponse.error) {
+                throw new Error(`Error posting collection offer: ${JSON.stringify(collectionResponse.error)}`);
+            }
+
+            console.log(
+                `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
+            );
+            break; // Break loop on success
+
+        } catch (error) {
+            console.error(error);
+            attempt++;
+            if(attempt >= maxAttempts) {
+                console.error('Maximum attempts reached. Exiting...');
+                return;
+            }
+        }
     }
-
-    const priceWei = getTrimmedPriceInWei(highestOffer, increment)
-    const price = ethers.BigNumber.from(priceWei) / 10 ** 18
-
-    console.log(`Building offer for ${price}...`)
-    const collectionOffer = await buildCollectionOffer({
-        collectionSlug: slug,
-        quantity: 1,
-        priceWei: priceWei,
-        expirationSeconds: BigInt(830),
-    })
-
-    console.log(`Signing offer...`)
-    const collectionSignature = await signOffer(signer, collectionOffer)
-
-    console.log(`Posting offer...`)
-    const collectionResponse = await postCriteriaOffer(
-        slug,
-        collectionOffer,
-        collectionSignature,
-    )
-
-    if (collectionResponse.error) {
-        console.error(`Error posting collection offer: ${JSON.stringify(collectionResponse.error)}`)
-        return
-    }
-    console.log(
-        `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
-    )
 }
+
 
 console.log('Starting... looking for new offers...')
 main().catch(error => console.error(error));
