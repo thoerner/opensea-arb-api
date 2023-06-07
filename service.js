@@ -2,6 +2,9 @@ import express from 'express'
 import { spawn } from 'child_process'
 
 const app = express()
+app.use(cors({
+    origin: '*'
+}))
 app.use(express.json())
 
 let workers = {}
