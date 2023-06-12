@@ -129,6 +129,11 @@ const getAllListings = async (slug, next) => {
     return getRequest(apiV2Url + `/listings/collection/${slug}/all?next=${next}`)
 }
 
+const getTraits = async (slug) => {
+    const collection = await getCollection(slug)
+    return collection.collection.traits
+}
+
 const getFloorAndOffer = async (slug) => {
     const offerParams = await getCollectionOffers(slug)
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
@@ -182,5 +187,7 @@ export {
     signOffer,
     postCriteriaOffer,
     getFloorAndOffer,
-    getCollectionName
+    getCollectionName,
+    getTraits,
+    getCollection
 }

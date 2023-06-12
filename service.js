@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import { spawn } from 'child_process'
+import { getCollection } from './openSea.js'
 
 const app = express()
 app.use(cors({
@@ -9,6 +10,18 @@ app.use(cors({
 app.use(express.json())
 
 let workers = {}
+
+app.post('/collectionInfo', async (req, res) => {
+    const collectionSlug = req.body.collectionSlug
+
+    const collection = await getCollection(collectionSlug)
+    const contractInfo = collection.primary_asset_contracts[0]
+    const traits = collection.traits
+    const stats = collection.stats
+    const imageUrl = collection.image_url
+
+    res.send({ contractInfo, traits, stats, imageUrl })
+})
 
 app.post('/start', (req, res) => {
     const collectionSlug = req.body.collectionSlug
