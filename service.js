@@ -19,8 +19,12 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
     const traits = collection.traits
     const stats = collection.stats
     const imageUrl = collection.image_url
+    const creatorFee = {
+        isEnforced: collection.is_creator_fees_enforced,
+        fee: collection.dev_seller_fee_basis_points
+    }
 
-    res.send({ contractInfo, traits, stats, imageUrl })
+    res.send({ contractInfo, traits, stats, creatorFee, imageUrl })
 })
 
 app.post('/start', (req, res) => {
