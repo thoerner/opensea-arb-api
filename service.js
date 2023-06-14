@@ -16,6 +16,7 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
 
     const collection = await getCollection(collectionSlug)
     const contractInfo = collection.primary_asset_contracts[0]
+    const name = collection.name
     const traits = collection.traits
     const stats = collection.stats
     const imageUrl = collection.image_url
@@ -24,7 +25,7 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
         fee: collection.dev_seller_fee_basis_points
     }
 
-    res.send({ contractInfo, traits, stats, creatorFee, imageUrl })
+    res.send({ contractInfo, name, traits, stats, creatorFee, imageUrl })
 })
 
 app.post('/start', (req, res) => {
