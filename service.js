@@ -11,8 +11,8 @@ app.use(express.json())
 
 let workers = {}
 
-app.post('/collectionInfo', async (req, res) => {
-    const collectionSlug = req.body.collectionSlug
+app.get('/collectionInfo/:collectionSlug', async (req, res) => {
+    const collectionSlug = req.params.collectionSlug
 
     const collection = await getCollection(collectionSlug)
     const contractInfo = collection.primary_asset_contracts[0]
