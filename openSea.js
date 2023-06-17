@@ -138,6 +138,7 @@ const getFloorAndOffer = async (slug) => {
     const offerParams = await getCollectionOffers(slug)
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
     const highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
+    const highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
     
     let listing_prices = []
     
@@ -164,7 +165,7 @@ const getFloorAndOffer = async (slug) => {
     
     let floorPrice = getLowestListing()
     
-    return { highestOffer, floorPrice }
+    return { highestOffer, floorPrice, highestOfferer }
 }
 
 const getCollectionInfo = async (collectionSlug) => {

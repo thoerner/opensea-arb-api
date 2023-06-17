@@ -35,10 +35,15 @@ async function main() {
             console.log(`Margin: ${margin}`);
             console.log(`Bid Increment: ${increment}`);
 
-            const { highestOffer, floorPrice } = await getFloorAndOffer(slug);
+            const { highestOffer, floorPrice, highestOfferer } = await getFloorAndOffer(slug);
 
             console.log(`highestOffer: ${highestOffer}`);
             console.log(`floorPrice: ${floorPrice}`);
+
+            if (highestOfferer === signer.address.toLowerCase()) {
+                console.log('You are the highest offerer. Not posting.');
+                return;
+            }
         
             if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
                 console.log('Offer too close to floor. Not posting.');
