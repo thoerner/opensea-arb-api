@@ -6,6 +6,8 @@ import { getTrimmedPriceInWei } from './utils.js'
 const { provider, privateKey } = config
 const signer = new ethers.Wallet(privateKey, provider)
 
+const OFFER_EXPIRATION_SECONDS = 180
+
 const slug = process.argv[2]
 if (!slug) {
     console.error('No collection slug provided')
@@ -50,7 +52,7 @@ async function main() {
                 collectionSlug: slug,
                 quantity: 1,
                 priceWei: priceWei,
-                expirationSeconds: BigInt(830),
+                expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
             });
 
             console.log(`Signing offer...`);
@@ -87,8 +89,7 @@ async function main() {
 console.log('Starting... looking for new offers...')
 main().catch(error => console.error(error));
 
-// run it every 840 seconds
 setInterval(() => {
     console.log('Looking to post a new offer...');
     main().catch(error => console.error(error));
-}, 840000);
+}, OFFER_EXPIRATION_SECONDS * 1000 + 5000);
