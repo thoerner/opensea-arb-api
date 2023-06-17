@@ -6,7 +6,8 @@ import { getTrimmedPriceInWei } from './utils.js'
 const { provider, privateKey } = config
 const signer = new ethers.Wallet(privateKey, provider)
 
-const OFFER_EXPIRATION_SECONDS = 180
+const OFFER_EXPIRATION_SECONDS = 830
+const OFFER_INTERVAL_SECONDS = 180
 
 const slug = process.argv[2]
 if (!slug) {
@@ -92,4 +93,4 @@ main().catch(error => console.error(error));
 setInterval(() => {
     console.log('Looking to post a new offer...');
     main().catch(error => console.error(error));
-}, OFFER_EXPIRATION_SECONDS * 1000 + 5000);
+}, OFFER_INTERVAL_SECONDS * 1000);
