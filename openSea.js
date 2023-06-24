@@ -155,7 +155,7 @@ const getFloorAndOffer = async (slug) => {
     
     await getListings('')
     
-    while (listings.next !== null) {
+    while (listings.next !== null && listings.next !== undefined) {
         next = listings.next
         await getListings(next)
     }
