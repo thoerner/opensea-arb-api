@@ -146,6 +146,7 @@ const getFloorAndOffer = async (slug) => {
     let next = null
     
     const getListings = async (next) => {
+        console.log(slug, next)
         listings = await getAllListings(slug, next)
         for (let i = 0; i < listings.listings.length; i++) {
             listing_prices.push(listings.listings[i].price.current.value / (10 ** 18))
