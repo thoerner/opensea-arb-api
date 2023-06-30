@@ -6,6 +6,25 @@ import { getTrimmedPriceInWei } from './utils.js'
 const { provider, privateKey } = config
 const signer = new ethers.Wallet(privateKey, provider)
 
+const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+
+const ERC20_ABI = [
+    // Some details about the token
+    "function name() view returns (string)",
+    "function symbol() view returns (string)",
+
+    // Get the account balance
+    "function balanceOf(address) view returns (uint)",
+];
+
+const wethContract = new ethers.Contract(WETH_ADDRESS, ERC20_ABI, signer);
+
+async function getWETHBalance() {
+    const balance = await wethContract.balanceOf(signer.address);
+    console.log(`WETH Balance: ${ethers.utils.formatEther(balance)}`);
+    return balance;
+}
+
 const OFFER_EXPIRATION_SECONDS = 830
 const OFFER_INTERVAL_SECONDS = 180
 
@@ -40,6 +59,17 @@ async function main() {
             console.log(`highestOffer: ${highestOffer}`);
             console.log(`floorPrice: ${floorPrice}`);
 
+            console.log(`Signer address: ${signer.address}`);
+            let wethBalance = await getWETHBalance();
+
+            const priceWei = getTrimmedPriceInWei(highestOffer, increment);
+            const price = ethers.BigNumber.from(priceWei) / 10 ** 18;
+
+            if (priceWei > wethBalance) {
+                console.log('Not enough WETH to post offer.');
+                return;
+            }
+
             if (highestOfferer === signer.address.toLowerCase()) {
                 console.log('You are the highest offerer. Not posting.');
                 return;
@@ -48,10 +78,7 @@ async function main() {
             if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
                 console.log('Offer too close to floor. Not posting.');
                 return;
-            }
-
-            const priceWei = getTrimmedPriceInWei(highestOffer, increment);
-            const price = ethers.BigNumber.from(priceWei) / 10 ** 18;
+            }            
 
             console.log(`Building offer for ${price}...`);
             const collectionOffer = await buildCollectionOffer({
@@ -95,7 +122,7 @@ async function main() {
 console.log('Starting... looking for new offers...')
 main().catch(error => console.error(error));
 
-setInterval(() => {
-    console.log('Looking to post a new offer...');
-    main().catch(error => console.error(error));
-}, OFFER_INTERVAL_SECONDS * 1000);
+// setInterval(() => {
+//     console.log('Looking to post a new offer...');
+//     main().catch(error => console.error(error));
+// }, OFFER_INTERVAL_SECONDS * 1000);

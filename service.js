@@ -2,6 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import { spawn } from 'child_process'
 import { getCollection } from './openSea.js'
+import Queue from 'bull'
+
+const scanQueue = new Queue('scan', 'redis://127.0.0.1:6379')
+let intervals = {}
 
 const app = express()
 app.use(cors({
@@ -28,45 +32,40 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
     res.send({ contractInfo, name, traits, stats, creatorFee, imageUrl })
 })
 
-app.post('/start', (req, res) => {
-    const collectionSlug = req.body.collectionSlug
-    const margin = req.body.margin
-    const increment = req.body.increment
+app.post('/start', async (req, res) => {
+    const collectionSlug = req.body.collectionSlug;
+    const margin = req.body.margin;
+    const increment = req.body.increment;
 
-    if (workers[collectionSlug]) {
-        return res.status(400).send('Collection already being scanned')
+    if (intervals[collectionSlug]) {
+        res.send('Collection is already being scanned')
+        return
     }
+  
+    // Schedule the job to run immediately
+    await scanQueue.add({
+      collectionSlug,
+      margin,
+      increment
+    });
 
-    const worker = spawn('node', ['index.js', collectionSlug, margin, increment])
-
-    worker.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`)
-    })
-
-    worker.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`)
-    })
-
-    worker.on('close', (code) => {
-        console.log(`${collectionSlug} scan stopped with code: ${code}`)
-        delete workers[collectionSlug]
-    })
-
-    workers[collectionSlug] = worker
-
-    res.send('Started scanning collection')
-})
+    // Then schedule the job to run every 3 minutes afterwards
+    intervals[collectionSlug] = setInterval(async () => {
+      await scanQueue.add({
+        collectionSlug,
+        margin,
+        increment
+      });
+    }, 3 * 60 * 1000);
+  
+    res.send('Started scanning collection');
+});
 
 app.post('/stop', (req, res) => {
     const collectionSlug = req.body.collectionSlug
   
-    const worker = workers[collectionSlug]
-    if (!worker) {
-      return res.status(400).send('Collection is not being scanned')
-    }
-  
-    worker.kill();
-    delete workers[collectionSlug]
+    clearInterval(intervals[collectionSlug])
+    delete intervals[collectionSlug]
   
     res.send('Stopped scanning collection')
 })
@@ -74,6 +73,25 @@ app.post('/stop', (req, res) => {
 app.get('/active', (req, res) => {
     res.send(Object.keys(workers))
 })
+
+scanQueue.process(2, (job, done) => {
+    const { collectionSlug, margin, increment } = job.data;
+    
+    const worker = spawn('node', ['index.js', collectionSlug, margin, increment]);
+  
+    worker.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+  
+    worker.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+  
+    worker.on('close', (code) => {
+      console.log(`${collectionSlug} scan stopped with code: ${code}`);
+      done();
+    });
+});
   
 app.listen(3000, () => {
     console.log('Server started on port 3000')
