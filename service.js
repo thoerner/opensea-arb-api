@@ -36,7 +36,7 @@ app.post('/start', async (req, res) => {
     const increment = req.body.increment;
 
     if (intervals[collectionSlug]) {
-        res.send('Collection is already being scanned')
+        res.send(`Already scanning collection ${collectionSlug}`)
         return
     }
   
@@ -56,7 +56,7 @@ app.post('/start', async (req, res) => {
       });
     }, 3 * 60 * 1000);
   
-    res.send('Started scanning collection');
+    res.send(`Started scanning collection ${collectionSlug}`)
 });
 
 app.post('/stop', (req, res) => {
@@ -65,7 +65,7 @@ app.post('/stop', (req, res) => {
     clearInterval(intervals[collectionSlug])
     delete intervals[collectionSlug]
   
-    res.send('Stopped scanning collection')
+    res.send(`Stopped scanning collection ${collectionSlug}`)
 })
 
 app.get('/active', (req, res) => {
@@ -86,7 +86,7 @@ scanQueue.process(2, (job, done) => {
     });
   
     worker.on('close', (code) => {
-      console.log(`${collectionSlug} scan stopped with code: ${code}`);
+      console.log(`${collectionSlug} scan completed with code: ${code}`);
       done();
     });
 });
