@@ -13,8 +13,6 @@ app.use(cors({
 }))
 app.use(express.json())
 
-let workers = {}
-
 app.get('/collectionInfo/:collectionSlug', async (req, res) => {
     const collectionSlug = req.params.collectionSlug
 
@@ -71,7 +69,7 @@ app.post('/stop', (req, res) => {
 })
 
 app.get('/active', (req, res) => {
-    res.send(Object.keys(workers))
+    res.send(Object.keys(intervals))
 })
 
 scanQueue.process(2, (job, done) => {
