@@ -3,6 +3,9 @@ import cors from 'cors'
 import { spawn } from 'child_process'
 import { getCollection } from './openSea.js'
 import Queue from 'bull'
+import { DynamoDBClient, GetItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb'
+
+const dbClient = new DynamoDBClient({ region: 'us-east-1' })
 
 const scanQueue = new Queue('scan', 'redis://127.0.0.1:6379')
 let intervals = {}
@@ -35,10 +38,24 @@ app.post('/start', async (req, res) => {
     const margin = req.body.margin;
     const increment = req.body.increment;
 
-    if (intervals[collectionSlug]) {
+    const command = new GetItemCommand({
+        TableName: 'arb-anderson-scans',
+        Key: {
+          slug: { S: collectionSlug }
+        }
+    });
+
+    const response = await dbClient.send(command);
+
+    if (response.Item) {
         res.send(`Already scanning collection ${collectionSlug}`)
         return
     }
+
+    // if (intervals[collectionSlug]) {
+    //     res.send(`Already scanning collection ${collectionSlug}`)
+    //     return
+    // }
   
     // Schedule the job to run immediately
     await scanQueue.add({
@@ -61,6 +78,20 @@ app.post('/start', async (req, res) => {
 
 app.post('/stop', (req, res) => {
     const collectionSlug = req.body.collectionSlug
+
+    if (!intervals[collectionSlug]) {
+        res.send(`Not scanning collection ${collectionSlug}`)
+        return
+    }
+
+    const command = new DeleteItemCommand({
+        TableName: 'arb-anderson-scans',
+        Key: {
+          slug: { S: collectionSlug }
+        }
+    });
+
+    dbClient.send(command)
   
     clearInterval(intervals[collectionSlug])
     delete intervals[collectionSlug]
