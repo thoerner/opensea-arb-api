@@ -3,7 +3,7 @@ import cors from 'cors'
 import { spawn } from 'child_process'
 import { getCollection } from './openSea.js'
 import Queue from 'bull'
-import { DynamoDBClient, GetItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient, GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 
 const dbClient = new DynamoDBClient({ region: 'us-east-1' })
 
@@ -51,6 +51,15 @@ app.post('/start', async (req, res) => {
         res.send(`Already scanning collection ${collectionSlug}`)
         return
     }
+
+    const putCommand = new PutItemCommand({
+        TableName: 'arb_anderson_scans',
+        Item: {
+            slug: { S: collectionSlug }
+        }
+    });
+
+    await dbClient.send(putCommand)
 
     // if (intervals[collectionSlug]) {
     //     res.send(`Already scanning collection ${collectionSlug}`)
