@@ -3,7 +3,7 @@ import cors from 'cors'
 import { spawn } from 'child_process'
 import { getCollection } from './openSea.js'
 import Queue from 'bull'
-import { DynamoDBClient, GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
+import { DynamoDBClient, GetItemCommand, DeleteItemCommand, PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb'
 
 const dbClient = new DynamoDBClient({ region: 'us-east-1' })
 
@@ -55,7 +55,9 @@ app.post('/start', async (req, res) => {
     const putCommand = new PutItemCommand({
         TableName: 'arb_anderson_scans',
         Item: {
-            slug: { S: collectionSlug }
+            slug: { S: collectionSlug },
+            margin: { N: margin.toString() },
+            increment: { N: increment.toString() }
         }
     });
 
@@ -112,25 +114,61 @@ app.get('/active', (req, res) => {
     res.send(Object.keys(intervals))
 })
 
+const scanCollection = async (collectionSlug, margin, increment) => {
+
+    await scanQueue.add({
+      collectionSlug,
+      margin,
+      increment
+    });
+
+    intervals[collectionSlug] = setInterval(async () => {
+      await scanQueue.add({
+        collectionSlug,
+        margin,
+        increment
+      });
+    }, 3 * 60 * 1000);
+}
+
 scanQueue.process(2, (job, done) => {
-    const { collectionSlug, margin, increment } = job.data;
-    
-    const worker = spawn('node', ['index.js', collectionSlug, margin, increment]);
+  const { collectionSlug, margin, increment } = job.data;
   
-    worker.stdout.on('data', (data) => {
-      console.log(`stdout: ${data}`);
-    });
-  
-    worker.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`);
-    });
-  
-    worker.on('close', (code) => {
-      console.log(`${collectionSlug} scan completed with code: ${code}`);
-      done();
-    });
+  const worker = spawn('node', ['index.js', collectionSlug, margin, increment]);
+
+  worker.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+
+  worker.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+  });
+
+  worker.on('close', (code) => {
+    console.log(`${collectionSlug} scan completed with code: ${code}`);
+    done();
+  });
 });
   
-app.listen(3000, () => {
+app.listen(3000, async () => {
     console.log('Server started on port 3000')
+
+    try {
+      const command = new ScanCommand({
+        TableName: 'arb_anderson_scans'
+      });
+
+      const data = await dbClient.send(command)
+
+      if (data.Items) {
+        for (let item of data.Items) {
+          const { slug: collectionSlug, margin, increment } = item
+          console.log(`Resuming scan for ${collectionSlug}`)
+          await scanCollection(collectionSlug.S, margin.N, increment.N)
+        }
+      }
+    } catch (err) {
+      console.error(`Error resuming scans: ${err}`)
+    }
+
 })
