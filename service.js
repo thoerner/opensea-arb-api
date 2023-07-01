@@ -39,13 +39,13 @@ app.post('/start', async (req, res) => {
     const increment = req.body.increment;
 
     const command = new GetItemCommand({
-        TableName: 'arb-anderson-scans',
+        TableName: 'arb_anderson_scans',
         Key: {
           slug: { S: collectionSlug }
         }
     });
 
-    const response = await dbClient.send(command);
+    const response = await dbClient.send(command)
 
     if (response.Item) {
         res.send(`Already scanning collection ${collectionSlug}`)
@@ -85,7 +85,7 @@ app.post('/stop', (req, res) => {
     }
 
     const command = new DeleteItemCommand({
-        TableName: 'arb-anderson-scans',
+        TableName: 'arb_anderson_scans',
         Key: {
           slug: { S: collectionSlug }
         }
