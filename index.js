@@ -48,6 +48,11 @@ if (!schema) {
     schema = 'ERC721' // ERC721 schema default
 }
 
+let token = process.argv[6]
+if (!token) {
+    token = null
+}
+
 async function main() {
     const maxAttempts = 5; // Maximum number of attempts
     let attempt = 0;

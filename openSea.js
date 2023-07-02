@@ -68,6 +68,10 @@ const getOffer = (priceWei) => {
     ]
 }
 
+const createOffer = async (collectionSlug, offerSpecification) => {
+    
+}
+
 const buildCollectionOffer = async (offerSpecification) => {
 
     const { collectionSlug, quantity, priceWei, expirationSeconds } = offerSpecification

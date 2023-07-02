@@ -46,6 +46,7 @@ app.post('/start', async (req, res) => {
     const margin = req.body.margin;
     const increment = req.body.increment;
     const schema = req.body.schema;
+    const token = req.body.token;
 
     const getCommand = new GetItemCommand({
         TableName: 'arb_anderson_scans',
@@ -61,14 +62,38 @@ app.post('/start', async (req, res) => {
         return
     }
 
+    if (schema === 'ERC1155') {
+      if (!token) {
+        res.send(`No token provided for ERC1155 collection ${collectionSlug}`)
+        return
+      }
+    }
+
+    let item = {}
+
+    if (schema === 'ERC721') {
+      item = {
+        slug: { S: collectionSlug },
+        margin: { N: margin.toString() },
+        increment: { N: increment.toString() },
+        schema: { S: schema }
+      }
+    } else if (schema === 'ERC1155') {
+      item = {
+        slug: { S: collectionSlug },
+        margin: { N: margin.toString() },
+        increment: { N: increment.toString() },
+        schema: { S: schema },
+        token: { S: token }
+      }
+    } else {
+      res.send(`Invalid schema ${schema}`)
+      return
+    }
+
     const putCommand = new PutItemCommand({
         TableName: 'arb_anderson_scans',
-        Item: {
-            slug: { S: collectionSlug },
-            margin: { N: margin.toString() },
-            increment: { N: increment.toString() },
-            schema: { S: schema }
-        }
+        Item: item
     });
 
     await dbClient.send(putCommand)
@@ -78,7 +103,8 @@ app.post('/start', async (req, res) => {
       collectionSlug,
       margin,
       increment,
-      schema
+      schema,
+      token
     });
 
     // Then schedule the job to run every 3 minutes afterwards
@@ -87,7 +113,8 @@ app.post('/start', async (req, res) => {
         collectionSlug,
         margin,
         increment,
-        schema
+        schema,
+        token
       });
     }, 3 * 60 * 1000);
   
@@ -121,13 +148,14 @@ app.get('/active', (req, res) => {
     res.send(Object.keys(intervals))
 })
 
-const scanCollection = async (collectionSlug, margin, increment, schema) => {
+const scanCollection = async (collectionSlug, margin, increment, schema, token) => {
 
     await scanQueue.add({
       collectionSlug,
       margin,
       increment,
-      schema
+      schema,
+      token
     });
 
     intervals[collectionSlug] = setInterval(async () => {
@@ -135,15 +163,16 @@ const scanCollection = async (collectionSlug, margin, increment, schema) => {
         collectionSlug,
         margin,
         increment,
-        schema
+        schema,
+        token
       });
     }, 3 * 60 * 1000);
 }
 
 scanQueue.process(2, (job, done) => {
-  const { collectionSlug, margin, increment, schema } = job.data;
+  const { collectionSlug, margin, increment, schema, token } = job.data;
   
-  const worker = spawn('node', ['index.js', collectionSlug, margin, increment, schema]);
+  const worker = spawn('node', ['index.js', collectionSlug, margin, increment, schema, token]);
 
   worker.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -172,8 +201,12 @@ app.listen(3000, async () => {
       if (data.Items) {
         for (let item of data.Items) {
           const { slug: collectionSlug, margin, increment, schema } = item
+          let token = null
+          if (schema === 'ERC1155') {
+            token = item.token.S
+          } 
           console.log(`Resuming scan for ${collectionSlug}`)
-          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S)
+          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S, token)
         }
       }
     } catch (err) {
