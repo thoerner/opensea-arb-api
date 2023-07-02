@@ -57,13 +57,13 @@ async function main() {
             const { highestOffer, floorPrice, highestOfferer, collectionName } = await getFloorAndOffer(slug);
 
             console.log(`Collection: ${collectionName}`);
+            console.log(`Schema: ${schema}`);
             console.log(`Margin: ${margin}`);
             console.log(`Bid Increment: ${increment}`);
 
             console.log(`highestOffer: ${highestOffer}`);
             console.log(`floorPrice: ${floorPrice}`);
 
-            console.log(`Signer address: ${signer.address}`);
             let wethBalance = await getWETHBalance();
 
             const priceWei = getTrimmedPriceInWei(highestOffer, increment);

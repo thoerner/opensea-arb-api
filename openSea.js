@@ -134,6 +134,15 @@ const getTraits = async (slug) => {
     return collection.collection.traits
 }
 
+const getNfts = async (slug) => {
+    const response = await getRequest(apiV2Url + `/collection/${slug}/nfts`)
+    let count = response.nfts[0].count
+    return {
+        count,
+        nfts: response.nfts[0]
+    }
+}
+
 const getFloorAndOffer = async (slug) => {
     const offerParams = await getCollectionOffers(slug)
     const collectionName = offerParams.offers[0].criteria.collection.slug
@@ -186,5 +195,6 @@ export {
     postCriteriaOffer,
     getFloorAndOffer,
     getTraits,
-    getCollection
+    getCollection,
+    getNfts
 }

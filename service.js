@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import { spawn } from 'child_process'
-import { getCollection } from './openSea.js'
+import { getCollection, getNfts } from './openSea.js'
 import Queue from 'bull'
 import { DynamoDBClient, GetItemCommand, DeleteItemCommand, PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb'
 
@@ -31,7 +31,14 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
         fee: collection.dev_seller_fee_basis_points
     }
 
-    res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl })
+    if (schema === 'ERC1155') {
+        const { count, nfts } = await getNfts(collectionSlug)
+        res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl, nfts })
+        return
+    } else {
+        res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl })
+        return
+    }
 })
 
 app.post('/start', async (req, res) => {
