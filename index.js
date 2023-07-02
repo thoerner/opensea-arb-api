@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import config from './config.js'
-import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer, getCollectionName } from './openSea.js'
+import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer } from './openSea.js'
 import { getTrimmedPriceInWei } from './utils.js'
 
 const { provider, privateKey } = config
@@ -50,11 +50,11 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            console.log(`Collection: ${await getCollectionName(slug)}`);
+            const { highestOffer, floorPrice, highestOfferer, collectionName } = await getFloorAndOffer(slug);
+
+            console.log(`Collection: ${collectionName}`);
             console.log(`Margin: ${margin}`);
             console.log(`Bid Increment: ${increment}`);
-
-            const { highestOffer, floorPrice, highestOfferer } = await getFloorAndOffer(slug);
 
             console.log(`highestOffer: ${highestOffer}`);
             console.log(`floorPrice: ${floorPrice}`);

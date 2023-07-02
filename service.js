@@ -38,14 +38,14 @@ app.post('/start', async (req, res) => {
     const margin = req.body.margin;
     const increment = req.body.increment;
 
-    const command = new GetItemCommand({
+    const getCommand = new GetItemCommand({
         TableName: 'arb_anderson_scans',
         Key: {
           slug: { S: collectionSlug }
         }
     });
 
-    const response = await dbClient.send(command)
+    const response = await dbClient.send(getCommand)
 
     if (response.Item) {
         res.send(`Already scanning collection ${collectionSlug}`)
@@ -63,11 +63,6 @@ app.post('/start', async (req, res) => {
 
     await dbClient.send(putCommand)
 
-    // if (intervals[collectionSlug]) {
-    //     res.send(`Already scanning collection ${collectionSlug}`)
-    //     return
-    // }
-  
     // Schedule the job to run immediately
     await scanQueue.add({
       collectionSlug,
@@ -95,14 +90,14 @@ app.post('/stop', (req, res) => {
         return
     }
 
-    const command = new DeleteItemCommand({
+    const deleteCommand = new DeleteItemCommand({
         TableName: 'arb_anderson_scans',
         Key: {
           slug: { S: collectionSlug }
         }
     });
 
-    dbClient.send(command)
+    dbClient.send(deleteCommand)
   
     clearInterval(intervals[collectionSlug])
     delete intervals[collectionSlug]

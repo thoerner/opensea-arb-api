@@ -136,6 +136,7 @@ const getTraits = async (slug) => {
 
 const getFloorAndOffer = async (slug) => {
     const offerParams = await getCollectionOffers(slug)
+    const collectionName = offerParams.offers[0].criteria.collection.slug
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
     const highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
     const highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
@@ -166,23 +167,23 @@ const getFloorAndOffer = async (slug) => {
     
     let floorPrice = getLowestListing()
     
-    return { highestOffer, floorPrice, highestOfferer }
+    return { highestOffer, floorPrice, highestOfferer, collectionName }
 }
 
-const getCollectionInfo = async (collectionSlug) => {
-    const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`)
-    return response.collection
-}
+// const getCollectionInfo = async (collectionSlug) => {
+//     const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`)
+//     return response.collection
+// }
 
-const getCollection = async (slug) => {
-    const response = await getCollectionInfo(slug)
-    return response
-}
+// const getCollection = async (slug) => {
+//     const response = await getCollectionInfo(slug)
+//     return response
+// }
 
-const getCollectionName = async (slug) => {
-    const collection = await getCollection(slug)
-    return collection.primary_asset_contracts[0].name
-}
+// const getCollectionName = async (slug) => {
+//     const collection = await getCollection(slug)
+//     return collection.primary_asset_contracts[0].name
+// }
 
 export {
     buildCollectionOffer,
