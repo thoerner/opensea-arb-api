@@ -166,7 +166,7 @@ app.listen(3000, async () => {
         for (let item of data.Items) {
           const { slug: collectionSlug, margin, increment, schema } = item
           console.log(`Resuming scan for ${collectionSlug}`)
-          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S ? schema.S : null)
+          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S)
         }
       }
     } catch (err) {
