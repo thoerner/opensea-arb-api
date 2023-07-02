@@ -136,10 +136,10 @@ const getTraits = async (slug) => {
 
 const getNfts = async (slug) => {
     const response = await getRequest(apiV2Url + `/collection/${slug}/nfts`)
-    let count = response.nfts[0].count
+    let count = response.nfts.count
     return {
         count,
-        nfts: response.nfts[0]
+        nfts: response.nfts
     }
 }
 
