@@ -26,7 +26,6 @@ async function getWETHBalance() {
 }
 
 const OFFER_EXPIRATION_SECONDS = 830
-const OFFER_INTERVAL_SECONDS = 180
 
 const slug = process.argv[2]
 if (!slug) {
@@ -42,6 +41,11 @@ if (!margin) {
 let increment = Number(process.argv[4])
 if (!increment) {
     increment = 0.01 // 1% increment default
+}
+
+let schema = process.argv[5]
+if (!schema) {
+    schema = 'ERC721' // ERC721 schema default
 }
 
 async function main() {
@@ -121,8 +125,3 @@ async function main() {
 
 console.log('Starting... looking for new offers...')
 main().catch(error => console.error(error));
-
-// setInterval(() => {
-//     console.log('Looking to post a new offer...');
-//     main().catch(error => console.error(error));
-// }, OFFER_INTERVAL_SECONDS * 1000);

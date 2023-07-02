@@ -38,6 +38,7 @@ app.post('/start', async (req, res) => {
     const collectionSlug = req.body.collectionSlug;
     const margin = req.body.margin;
     const increment = req.body.increment;
+    const schema = req.body.schema;
 
     const getCommand = new GetItemCommand({
         TableName: 'arb_anderson_scans',
@@ -58,7 +59,8 @@ app.post('/start', async (req, res) => {
         Item: {
             slug: { S: collectionSlug },
             margin: { N: margin.toString() },
-            increment: { N: increment.toString() }
+            increment: { N: increment.toString() },
+            schema: { S: schema }
         }
     });
 
@@ -68,7 +70,8 @@ app.post('/start', async (req, res) => {
     await scanQueue.add({
       collectionSlug,
       margin,
-      increment
+      increment,
+      schema
     });
 
     // Then schedule the job to run every 3 minutes afterwards
@@ -76,7 +79,8 @@ app.post('/start', async (req, res) => {
       await scanQueue.add({
         collectionSlug,
         margin,
-        increment
+        increment,
+        schema
       });
     }, 3 * 60 * 1000);
   
@@ -110,27 +114,29 @@ app.get('/active', (req, res) => {
     res.send(Object.keys(intervals))
 })
 
-const scanCollection = async (collectionSlug, margin, increment) => {
+const scanCollection = async (collectionSlug, margin, increment, schema) => {
 
     await scanQueue.add({
       collectionSlug,
       margin,
-      increment
+      increment,
+      schema
     });
 
     intervals[collectionSlug] = setInterval(async () => {
       await scanQueue.add({
         collectionSlug,
         margin,
-        increment
+        increment,
+        schema
       });
     }, 3 * 60 * 1000);
 }
 
 scanQueue.process(2, (job, done) => {
-  const { collectionSlug, margin, increment } = job.data;
+  const { collectionSlug, margin, increment, schema } = job.data;
   
-  const worker = spawn('node', ['index.js', collectionSlug, margin, increment]);
+  const worker = spawn('node', ['index.js', collectionSlug, margin, increment, schema]);
 
   worker.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -158,9 +164,9 @@ app.listen(3000, async () => {
 
       if (data.Items) {
         for (let item of data.Items) {
-          const { slug: collectionSlug, margin, increment } = item
+          const { slug: collectionSlug, margin, increment, schema } = item
           console.log(`Resuming scan for ${collectionSlug}`)
-          await scanCollection(collectionSlug.S, margin.N, increment.N)
+          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S)
         }
       }
     } catch (err) {
