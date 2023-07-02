@@ -170,15 +170,15 @@ const getFloorAndOffer = async (slug) => {
     return { highestOffer, floorPrice, highestOfferer, collectionName }
 }
 
-// const getCollectionInfo = async (collectionSlug) => {
-//     const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`)
-//     return response.collection
-// }
+const getCollectionInfo = async (collectionSlug) => {
+    const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`)
+    return response.collection
+}
 
-// const getCollection = async (slug) => {
-//     const response = await getCollectionInfo(slug)
-//     return response
-// }
+const getCollection = async (slug) => {
+    const response = await getCollectionInfo(slug)
+    return response
+}
 
 // const getCollectionName = async (slug) => {
 //     const collection = await getCollection(slug)
@@ -190,7 +190,7 @@ export {
     signOffer,
     postCriteriaOffer,
     getFloorAndOffer,
-    // getCollectionName,
+    getCollectionName,
     getTraits,
     // getCollection
 }
