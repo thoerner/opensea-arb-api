@@ -190,7 +190,7 @@ export {
     signOffer,
     postCriteriaOffer,
     getFloorAndOffer,
-    getCollectionName,
+    // getCollectionName,
     getTraits,
-    getCollection
+    // getCollection
 }
