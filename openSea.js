@@ -180,17 +180,11 @@ const getCollection = async (slug) => {
     return response
 }
 
-// const getCollectionName = async (slug) => {
-//     const collection = await getCollection(slug)
-//     return collection.primary_asset_contracts[0].name
-// }
-
 export {
     buildCollectionOffer,
     signOffer,
     postCriteriaOffer,
     getFloorAndOffer,
-    // getCollectionName,
     getTraits,
     getCollection
 }

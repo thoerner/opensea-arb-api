@@ -24,13 +24,14 @@ app.get('/collectionInfo/:collectionSlug', async (req, res) => {
     const name = collection.name
     const traits = collection.traits
     const stats = collection.stats
+    const schema = collection.primary_asset_contracts[0].schema_name
     const imageUrl = collection.image_url
     const creatorFee = {
         isEnforced: collection.is_creator_fees_enforced,
         fee: collection.dev_seller_fee_basis_points
     }
 
-    res.send({ contractInfo, name, traits, stats, creatorFee, imageUrl })
+    res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl })
 })
 
 app.post('/start', async (req, res) => {
