@@ -56,7 +56,7 @@ app.listen(3000, async () => {
         for (let item of data.Items) {
           const { slug: collectionSlug, margin, increment, schema, jobId } = item
           let token = null
-          if (schema === 'ERC1155') {
+          if (schema.S === 'ERC1155') {
             token = item.token.S
           } 
 
@@ -81,19 +81,38 @@ app.listen(3000, async () => {
             }
           });
 
+          let dbItem = {}
+
+          if (schema.S === 'ERC1155') {
+            dbItem = {
+              slug: {S: collectionSlug.S},
+              margin: {N: margin.N},
+              increment: {N: increment.N},
+              schema: {S: schema.S},
+              jobId: {S: job.id},
+              token
+            }
+          } else if (schema.S === 'ERC721') {
+            dbItem = {
+              slug: {S: collectionSlug.S},
+              margin: {N: margin.N},
+              increment: {N: increment.N},
+              schema: {S: schema.S},
+              jobId: {S: job.id},
+            }
+          }
+
+          console.log(dbItem)
+
           const putCommand = new PutItemCommand({
             TableName: 'arb_anderson_scans',
-            Item: {
-              slug: collectionSlug.S,
-              margin: margin.N,
-              increment: increment.N,
-              schema: schema.S,
-              jobId: job.id
-            }
+            Item: dbItem
           });
 
-          await dbClient.send(putCommand)
-      
+          const res = await dbClient.send(putCommand)
+          console.log('Response from DynamoDB:')
+          console.log(JSON.stringify(res))
+
           jobs[collectionSlug.S] = job.id;
         }
       }
