@@ -3,16 +3,7 @@ import config from '../config.js'
 
 const {apiV1Url, apiV2Url, sigTypes, offerer, wethAddress, conduitKey, protocolAddress, seaportContractAddress, domain } = config
 
-const buildOffer = async (slug, quantity) => {
-    const buildPayload = {
-        quantity,
-        offer_protection_enabled: true,
-        offerer,
-        criteria: { collection: { slug } },
-        protocol_address: protocolAddress
-    }
-    return postRequest(apiV2Url + `/offers/build`, buildPayload)
-}
+
 
 const getFee = (priceWei, feeBasisPoints, recipient) => {
     const fee = (priceWei * feeBasisPoints) / BigInt(10000)
@@ -68,8 +59,84 @@ const getOffer = (priceWei) => {
     ]
 }
 
-const createOffer = async (collectionSlug, offerSpecification) => {
-    
+const getItemTokenConsideration = async (
+    assetContractAddress,
+    tokenId,
+    quantity,
+) => {
+    return {
+        itemType: 2,
+        token: assetContractAddress,
+        identifierOrCriteria: tokenId,
+        startAmount: quantity.toString(),
+        endAmount: quantity.toString(),
+        recipient: offerer,
+    }
+}
+
+const getItemConsideration = async (
+    assetContractAddress,
+    tokenId,
+    quantity,
+    priceWei,
+) => {
+    const fees = [
+        await getItemTokenConsideration(assetContractAddress, tokenId, quantity),
+        ...(await getItemFees(assetContractAddress, tokenId, priceWei)),
+    ]
+
+    return fees
+}
+
+const buildItemOffer = async (offerSpecification) => {
+    const { assetContractAddress, tokenId, quantity, priceWei, expirationSeconds } = offerSpecification
+
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const startTime = now.toString()
+    const endTime = (now + BigInt(expirationSeconds)).toString()
+    const consideration = await getItemConsideration(
+        assetContractAddress,
+        tokenId,
+        quantity,
+        priceWei,
+    )
+
+    const offer = {
+        offerer,
+        offer: getOffer(priceWei),
+        consideration,
+        startTime,
+        endTime,
+        orderType: 0,
+        zone: "0x0000000000000000000000000000000000000000",
+        zoneHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        salt: genSalt(38),
+        conduitKey,
+        totalOriginalConsiderationItems: consideration.length.toString(),
+        counter: 0
+    }
+
+    return offer
+}
+
+const postItemOffer = async (offer, signature) => {
+    const payload = {
+        parameters: offer,
+        signature,
+        protocol_address: protocolAddress
+    }
+    return await postRequest(apiV2Url + `/offers`, payload)
+}
+
+const buildOfferParams = async (slug, quantity) => {
+    const buildPayload = {
+        quantity,
+        offer_protection_enabled: true,
+        offerer,
+        criteria: { collection: { slug } },
+        protocol_address: protocolAddress
+    }
+    return postRequest(apiV2Url + `/offers/build`, buildPayload)
 }
 
 const buildCollectionOffer = async (offerSpecification) => {
@@ -79,10 +146,10 @@ const buildCollectionOffer = async (offerSpecification) => {
     const now = BigInt(Math.floor(Date.now() / 1000))
     const startTime = now.toString()
     const endTime = (now + BigInt(expirationSeconds)).toString()
-    const response = await buildOffer(collectionSlug, quantity)
-    const buildData = response.partialParameters
+    const rawOfferParams = await buildOfferParams(collectionSlug, quantity)
+    const offerParams = rawOfferParams.partialParameters
     const consideration = await getCriteriaConsideration(
-        buildData.consideration,
+        offerParams.consideration,
         collectionSlug,
         priceWei,
     )
@@ -94,8 +161,8 @@ const buildCollectionOffer = async (offerSpecification) => {
         startTime,
         endTime,
         orderType: 2,
-        zone: buildData.zone,
-        zoneHash: buildData.zoneHash,
+        zone: offerParams.zone,
+        zoneHash: offerParams.zoneHash,
         salt: genSalt(38),
         conduitKey,
         totalOriginalConsiderationItems: consideration.length.toString(),
@@ -153,6 +220,7 @@ const getFloorAndOffer = async (slug) => {
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
     const highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
     const highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
+    const collectionAddress = offerParams.offers[0].criteria.contract.address
     
     let listing_prices = []
     
@@ -180,7 +248,7 @@ const getFloorAndOffer = async (slug) => {
     
     let floorPrice = getLowestListing()
     
-    return { highestOffer, floorPrice, highestOfferer, collectionName }
+    return { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress }
 }
 
 const getCollectionInfo = async (collectionSlug) => {
@@ -195,6 +263,8 @@ const getCollection = async (slug) => {
 
 export {
     buildCollectionOffer,
+    buildItemOffer,
+    postItemOffer,
     signOffer,
     postCriteriaOffer,
     getFloorAndOffer,

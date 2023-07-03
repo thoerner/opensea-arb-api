@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import config from './config.js'
-import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer } from './utils/openSea.js'
+import { buildCollectionOffer, buildItemOffer, postItemOffer, signOffer, postCriteriaOffer, getFloorAndOffer } from './utils/openSea.js'
 import { getTrimmedPriceInWei } from './utils.js'
 
 const { provider, privateKey } = config
@@ -59,7 +59,7 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            const { highestOffer, floorPrice, highestOfferer, collectionName } = await getFloorAndOffer(slug);
+            const { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug);
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
@@ -87,34 +87,60 @@ async function main() {
             if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
                 console.log('Offer too close to floor. Not posting.');
                 return;
-            }            
-
-            console.log(`Building offer for ${price}...`);
-            const collectionOffer = await buildCollectionOffer({
-                collectionSlug: slug,
-                quantity: 1,
-                priceWei: priceWei,
-                expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
-            });
-
-            console.log(`Signing offer...`);
-            const collectionSignature = await signOffer(signer, collectionOffer);
-
-            console.log(`Posting offer...`);
-            const collectionResponse = await postCriteriaOffer(
-                slug,
-                collectionOffer,
-                collectionSignature,
-            );
-
-            if (collectionResponse.error) {
-                throw new Error(`Error posting collection offer: ${JSON.stringify(collectionResponse.error)}`);
             }
+            
+            if (schema === 'ERC721') {
+                
+                console.log(`Building offer for ${price}...`);
+                const collectionOffer = await buildCollectionOffer({
+                    collectionSlug: slug,
+                    quantity: 1,
+                    priceWei: priceWei,
+                    expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
+                });
 
-            console.log(
-                `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
-            );
-            break; // Break loop on success
+                console.log(`Signing offer...`);
+                const collectionSignature = await signOffer(signer, collectionOffer);
+
+                console.log(`Posting offer...`);
+                const collectionResponse = await postCriteriaOffer(
+                    slug,
+                    collectionOffer,
+                    collectionSignature,
+                );
+
+                if (collectionResponse.error) {
+                    throw new Error(`Error posting collection offer: ${JSON.stringify(collectionResponse.error)}`);
+                }
+
+                console.log(
+                    `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
+                );
+                break; // Break loop on success
+            } else if (schema === 'ERC1155') {
+
+                console.log(`Building offer for ${price}...`);
+                const itemOffer = await buildItemOffer({
+                    assetContractAddress: collectionAddress,
+                    tokenId: token,
+                    quantity: 1,
+                    priceWei: priceWei,
+                    expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
+                })
+                console.log(`Signing offer...`)
+                const itemSignature = await signOffer(signer, itemOffer);
+                console.log(`Posting offer...`)
+                const itemResponse = await postItemOffer(itemOffer, itemSignature);
+                if (itemResponse.error) {
+                    throw new Error(`Error posting item offer: ${JSON.stringify(itemResponse.error)}`);
+                }
+                const itemOrderHash = itemResponse.order.order_hash;
+                console.log(`Item offer posted! Order Hash: ${itemOrderHash}`);
+
+            } else {
+                console.error('Invalid schema provided. Exiting...');
+                return;
+            }
 
         } catch (error) {
             console.error(error);
