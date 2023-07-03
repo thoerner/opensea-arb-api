@@ -102,16 +102,12 @@ app.listen(3000, async () => {
             }
           }
 
-          console.log(dbItem)
-
           const putCommand = new PutItemCommand({
             TableName: 'arb_anderson_scans',
             Item: dbItem
           });
 
-          const res = await dbClient.send(putCommand)
-          console.log('Response from DynamoDB:')
-          console.log(JSON.stringify(res))
+          await dbClient.send(putCommand)
 
           jobs[collectionSlug.S] = job.id;
         }
