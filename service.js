@@ -5,7 +5,7 @@ import bodyParser from 'body-parser'
 import { spawn } from 'child_process'
 import collectionRoutes from './routes/collections.js'
 import scanRoutes from './routes/scans.js'
-import { ScanCommand } from '@aws-sdk/client-dynamodb'
+import { ScanCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { jobs } from './jobs.js'
 import { v4 as uuidv4 } from 'uuid'
 import { dbClient } from './config/db.js'
@@ -54,11 +54,19 @@ app.listen(3000, async () => {
 
       if (data.Items) {
         for (let item of data.Items) {
-          const { slug: collectionSlug, margin, increment, schema } = item
+          const { slug: collectionSlug, margin, increment, schema, jobId } = item
           let token = null
           if (schema === 'ERC1155') {
             token = item.token.S
           } 
+
+          if (jobId) {
+            const oldJob = await scanQueue.getJob(jobId.S)
+            if (oldJob) {
+              await oldJob.remove()
+            }
+          }
+
           console.log(`Resuming scan for ${collectionSlug}`)
           const job = await scanQueue.add({
             collectionSlug: collectionSlug.S,
@@ -72,6 +80,19 @@ app.listen(3000, async () => {
               every: 3 * 60 * 1000
             }
           });
+
+          const putCommand = new PutItemCommand({
+            TableName: 'arb_anderson_scans',
+            Item: {
+              slug: collectionSlug,
+              margin: margin,
+              increment: increment,
+              schema: schema,
+              jobId: job.id
+            }
+          });
+
+          await dbClient.send(putCommand)
       
           jobs[collectionSlug.S] = job.id;
         }

@@ -116,7 +116,7 @@ async function main() {
                 console.log(
                     `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
                 );
-                break; // Break loop on success
+                return;
             } else if (schema === 'ERC1155') {
 
                 console.log(`Building offer for ${price}...`);
@@ -136,6 +136,7 @@ async function main() {
                 }
                 const itemOrderHash = itemResponse.order.order_hash;
                 console.log(`Item offer posted! Order Hash: ${itemOrderHash}`);
+                return;
 
             } else {
                 console.error('Invalid schema provided. Exiting...');
