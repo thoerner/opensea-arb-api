@@ -67,13 +67,13 @@ app.listen(3000, async () => {
             }
           }
 
-          console.log(`Resuming scan for ${collectionSlug}`)
+          console.log(`Resuming scan for ${collectionSlug.S}`)
           const job = await scanQueue.add({
             collectionSlug: collectionSlug.S,
             margin: margin.N,
             increment: increment.N,
             schema: schema.S,
-            token: token
+            token
           }, {
             jobId: uuidv4(),
             repeat: {
@@ -84,10 +84,10 @@ app.listen(3000, async () => {
           const putCommand = new PutItemCommand({
             TableName: 'arb_anderson_scans',
             Item: {
-              slug: collectionSlug,
-              margin: margin,
-              increment: increment,
-              schema: schema,
+              slug: collectionSlug.S,
+              margin: margin.N,
+              increment: increment.N,
+              schema: schema.S,
               jobId: job.id
             }
           });
