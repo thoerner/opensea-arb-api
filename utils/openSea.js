@@ -74,6 +74,16 @@ const getItemTokenConsideration = async (
     }
 }
 
+const getItemFees = async (
+    assetContractAddress,
+    tokenId,
+    priceWei,
+) => {
+    const asset = await getRequest(apiV1Url + `/asset/${assetContractAddress}/${tokenId}`)
+    const feesObject = asset.collection.fees
+    return extractFeesApi(feesObject, priceWei)
+}
+
 const getItemConsideration = async (
     assetContractAddress,
     tokenId,
