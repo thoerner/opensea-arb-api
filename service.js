@@ -1,173 +1,27 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import bodyParser from 'body-parser'
 import { spawn } from 'child_process'
-import { getCollection, getNfts } from './openSea.js'
-import Queue from 'bull'
-import { DynamoDBClient, GetItemCommand, DeleteItemCommand, PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb'
-
-const dbClient = new DynamoDBClient({ region: 'us-east-1' })
-
-const scanQueue = new Queue('scan', 'redis://127.0.0.1:6379')
-let intervals = {}
+import collectionRoutes from './routes/collections.js'
+import scanRoutes from './routes/scans.js'
+import { ScanCommand } from '@aws-sdk/client-dynamodb'
+import { jobs } from './jobs.js'
+import { v4 as uuidv4 } from 'uuid'
+import { dbClient } from './config/db.js'
+import { scanQueue } from './config/queue.js'
 
 const app = express()
 app.use(cors({
     origin: '*'
 }))
 app.use(express.json())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(helmet())
 
-app.get('/collectionInfo/:collectionSlug', async (req, res) => {
-    const collectionSlug = req.params.collectionSlug
-
-    const collection = await getCollection(collectionSlug)
-    const contractInfo = collection.primary_asset_contracts[0]
-    const name = collection.name
-    const traits = collection.traits
-    const stats = collection.stats
-    const schema = collection.primary_asset_contracts[0].schema_name
-    const imageUrl = collection.image_url
-    const creatorFee = {
-        isEnforced: collection.is_creator_fees_enforced,
-        fee: collection.dev_seller_fee_basis_points
-    }
-
-    if (schema === 'ERC1155') {
-        const { count, nfts } = await getNfts(collectionSlug)
-        res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl, nfts })
-        return
-    } else {
-        res.send({ contractInfo, name, traits, stats, schema, creatorFee, imageUrl })
-        return
-    }
-})
-
-app.post('/start', async (req, res) => {
-    const collectionSlug = req.body.collectionSlug;
-    const margin = req.body.margin;
-    const increment = req.body.increment;
-    const schema = req.body.schema;
-    const token = req.body.token;
-
-    const getCommand = new GetItemCommand({
-        TableName: 'arb_anderson_scans',
-        Key: {
-          slug: { S: collectionSlug }
-        }
-    });
-
-    const response = await dbClient.send(getCommand)
-
-    if (response.Item) {
-        res.send(`Already scanning collection ${collectionSlug}`)
-        return
-    }
-
-    if (schema === 'ERC1155') {
-      if (!token) {
-        res.send(`No token provided for ERC1155 collection ${collectionSlug}`)
-        return
-      }
-    }
-
-    let item = {}
-
-    if (schema === 'ERC721') {
-      item = {
-        slug: { S: collectionSlug },
-        margin: { N: margin.toString() },
-        increment: { N: increment.toString() },
-        schema: { S: schema }
-      }
-    } else if (schema === 'ERC1155') {
-      item = {
-        slug: { S: collectionSlug },
-        margin: { N: margin.toString() },
-        increment: { N: increment.toString() },
-        schema: { S: schema },
-        token: { S: token }
-      }
-    } else {
-      res.send(`Invalid schema ${schema}`)
-      return
-    }
-
-    const putCommand = new PutItemCommand({
-        TableName: 'arb_anderson_scans',
-        Item: item
-    });
-
-    await dbClient.send(putCommand)
-
-    // Schedule the job to run immediately
-    await scanQueue.add({
-      collectionSlug,
-      margin,
-      increment,
-      schema,
-      token
-    });
-
-    // Then schedule the job to run every 3 minutes afterwards
-    intervals[collectionSlug] = setInterval(async () => {
-      await scanQueue.add({
-        collectionSlug,
-        margin,
-        increment,
-        schema,
-        token
-      });
-    }, 3 * 60 * 1000);
-  
-    res.send(`Started scanning collection ${collectionSlug}`)
-});
-
-app.post('/stop', (req, res) => {
-    const collectionSlug = req.body.collectionSlug
-
-    if (!intervals[collectionSlug]) {
-        res.send(`Not scanning collection ${collectionSlug}`)
-        return
-    }
-
-    const deleteCommand = new DeleteItemCommand({
-        TableName: 'arb_anderson_scans',
-        Key: {
-          slug: { S: collectionSlug }
-        }
-    });
-
-    dbClient.send(deleteCommand)
-  
-    clearInterval(intervals[collectionSlug])
-    delete intervals[collectionSlug]
-  
-    res.send(`Stopped scanning collection ${collectionSlug}`)
-})
-
-app.get('/active', (req, res) => {
-    res.send(Object.keys(intervals))
-})
-
-const scanCollection = async (collectionSlug, margin, increment, schema, token) => {
-
-    await scanQueue.add({
-      collectionSlug,
-      margin,
-      increment,
-      schema,
-      token
-    });
-
-    intervals[collectionSlug] = setInterval(async () => {
-      await scanQueue.add({
-        collectionSlug,
-        margin,
-        increment,
-        schema,
-        token
-      });
-    }, 3 * 60 * 1000);
-}
+app.use('/collectionInfo', collectionRoutes)
+app.use('/', scanRoutes)
 
 scanQueue.process(2, (job, done) => {
   const { collectionSlug, margin, increment, schema, token } = job.data;
@@ -206,11 +60,23 @@ app.listen(3000, async () => {
             token = item.token.S
           } 
           console.log(`Resuming scan for ${collectionSlug}`)
-          await scanCollection(collectionSlug.S, margin.N, increment.N, schema.S, token)
+          const job = await scanQueue.add({
+            collectionSlug: collectionSlug.S,
+            margin: margin.N,
+            increment: increment.N,
+            schema: schema.S,
+            token: token
+          }, {
+            jobId: uuidv4(),
+            repeat: {
+              every: 3 * 60 * 1000
+            }
+          });
+      
+          jobs[collectionSlug.S] = job.id;
         }
       }
     } catch (err) {
       console.error(`Error resuming scans: ${err}`)
     }
-
 })

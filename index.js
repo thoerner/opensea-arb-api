@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import config from './config.js'
-import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer } from './openSea.js'
+import { buildCollectionOffer, signOffer, postCriteriaOffer, getFloorAndOffer } from './utils/openSea.js'
 import { getTrimmedPriceInWei } from './utils.js'
 
 const { provider, privateKey } = config

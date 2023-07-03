@@ -1,5 +1,5 @@
-import { postRequest, getRequest, genSalt } from './utils.js'
-import config from './config.js'
+import { postRequest, getRequest, genSalt } from '../utils.js'
+import config from '../config.js'
 
 const {apiV1Url, apiV2Url, sigTypes, offerer, wethAddress, conduitKey, protocolAddress, seaportContractAddress, domain } = config
 
