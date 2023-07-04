@@ -89,8 +89,9 @@ export const startScan = async (req, res) => {
       await dbClient.send(putCommand)
 
       jobs[collectionSlug] = job.id;
-  
-    res.send(`Started scanning collection ${collectionSlug}`)
+    
+      console.log(`Started scanning collection ${collectionSlug}`)
+      res.send(`Started scanning collection ${collectionSlug}`)
 }
 
 export const stopScan = async (req, res) => {
@@ -103,12 +104,9 @@ export const stopScan = async (req, res) => {
   
     const jobId = jobs[collectionSlug];
     const job = await scanQueue.getJob(jobId);
-    console.log(`job: ${job}`)
 
     if (job) {
-      console.log('removing job')
       await job.remove();
-      console.log('removed job')
     }
     
     delete jobs[collectionSlug];
@@ -122,10 +120,12 @@ export const stopScan = async (req, res) => {
   
     await dbClient.send(deleteCommand)
     
+    console.log(`Stopped scanning collection ${collectionSlug}`)
     res.send(`Stopped scanning collection ${collectionSlug}`)
 }
 
 export const getActiveScans = async (req, res) => {
     const activeScans = Object.keys(jobs);
+    console.log(`Active scans: ${activeScans}`)
     res.send(activeScans);
 }
