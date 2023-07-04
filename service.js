@@ -63,7 +63,9 @@ app.listen(3000, async () => {
         }
 
         console.log(`Resuming scan for ${collectionSlug.S}`)
-        const job = await scanQueue.add({
+        const job = await scanQueue.add(
+          collectionSlug.S,
+        {
           collectionSlug: collectionSlug.S,
           margin: margin.N,
           increment: increment.N,
