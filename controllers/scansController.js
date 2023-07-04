@@ -43,35 +43,6 @@ export const startScan = async (req, res) => {
       }
     }
 
-    let item = {}
-
-    if (schema === 'ERC721') {
-      item = {
-        slug: { S: collectionSlug },
-        margin: { N: margin.toString() },
-        increment: { N: increment.toString() },
-        schema: { S: schema }
-      }
-    } else if (schema === 'ERC1155') {
-      item = {
-        slug: { S: collectionSlug },
-        margin: { N: margin.toString() },
-        increment: { N: increment.toString() },
-        schema: { S: schema },
-        token: { S: token }
-      }
-    } else {
-      res.send(`Invalid schema ${schema}`)
-      return
-    }
-
-    const putCommand = new PutItemCommand({
-        TableName: 'arb_anderson_scans',
-        Item: item
-    });
-
-    await dbClient.send(putCommand)
-
     // Schedule the job to run immediately and repeat every 3 minutes
     const job = await scanQueue.add({
         collectionSlug,
@@ -85,7 +56,38 @@ export const startScan = async (req, res) => {
           every: 3 * 60 * 1000
         }
       });
-    
+
+      let item = {}
+  
+      if (schema === 'ERC721') {
+        item = {
+          slug: { S: collectionSlug },
+          margin: { N: margin.toString() },
+          increment: { N: increment.toString() },
+          schema: { S: schema },
+          jobId: { S: job.id }
+        }
+      } else if (schema === 'ERC1155') {
+        item = {
+          slug: { S: collectionSlug },
+          margin: { N: margin.toString() },
+          increment: { N: increment.toString() },
+          schema: { S: schema },
+          jobId: { S: job.id },
+          token: { S: token }
+        }
+      } else {
+        res.send(`Invalid schema ${schema}`)
+        return
+      }
+  
+      const putCommand = new PutItemCommand({
+          TableName: 'arb_anderson_scans',
+          Item: item
+      });
+  
+      await dbClient.send(putCommand)
+
       jobs[collectionSlug] = job.id;
   
     res.send(`Started scanning collection ${collectionSlug}`)
