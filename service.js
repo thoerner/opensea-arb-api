@@ -23,7 +23,7 @@ app.use(helmet())
 app.use('/collectionInfo', collectionRoutes)
 app.use('/', scanRoutes)
 
-scanQueue.process(2, (job, done) => {
+scanQueue.process(1, (job, done) => {
   const { collectionSlug, margin, increment, schema, token } = job.data;
 
   const worker = spawn('node', ['scan.js', collectionSlug, margin, increment, schema, token]);
