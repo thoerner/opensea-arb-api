@@ -26,7 +26,7 @@ app.use('/', scanRoutes)
 scanQueue.process(2, (job, done) => {
   const { collectionSlug, margin, increment, schema, token } = job.data;
   
-  const worker = spawn('node', ['index.js', collectionSlug, margin, increment, schema, token]);
+  const worker = spawn('node', ['scan.js', collectionSlug, margin, increment, schema, token]);
 
   worker.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);

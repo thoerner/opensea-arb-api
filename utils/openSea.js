@@ -135,7 +135,7 @@ const postItemOffer = async (offer, signature) => {
         signature,
         protocol_address: protocolAddress
     }
-    return await postRequest(apiV2Url + `/offers`, payload)
+    return await postRequest(apiV2Url + `/orders/ethereum/seaport/offers`, payload)
 }
 
 const buildOfferParams = async (slug, quantity) => {
