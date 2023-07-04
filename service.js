@@ -72,7 +72,7 @@ app.listen(3000, async () => {
         }, {
           jobId: uuidv4(),
           repeat: {
-            every: 30 * 1000
+            every: 3 * 60 * 1000
           }
         });
 
