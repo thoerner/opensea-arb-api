@@ -103,9 +103,12 @@ export const stopScan = async (req, res) => {
   
     const jobId = jobs[collectionSlug];
     const job = await scanQueue.getJob(jobId);
-    
+    console.log(`job: ${job}`)
+
     if (job) {
+      console.log('removing job')
       await job.remove();
+      console.log('removed job')
     }
     
     delete jobs[collectionSlug];
