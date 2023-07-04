@@ -96,6 +96,7 @@ export const startScan = async (req, res) => {
 
   console.log(`Started scanning collection ${collectionSlug}`)
   res.send(`Started scanning collection ${collectionSlug}`)
+  return
 }
 
 export const stopScan = async (req, res) => {
@@ -127,10 +128,12 @@ export const stopScan = async (req, res) => {
 
   console.log(`Stopped scanning collection ${collectionSlug}`)
   res.send(`Stopped scanning collection ${collectionSlug}`)
+  return
 }
 
 export const getActiveScans = async (req, res) => {
   const activeScans = Object.keys(jobs);
   console.log(`Active scans: ${activeScans}`)
   res.send(activeScans);
+  return
 }
