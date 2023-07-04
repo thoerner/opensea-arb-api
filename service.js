@@ -45,6 +45,8 @@ scanQueue.process(2, (job, done) => {
 app.listen(3000, async () => {
     console.log('Server started on port 3000')
 
+    scanQueue.obliterate({ force: true })
+
     try {
       const command = new ScanCommand({
         TableName: 'arb_anderson_scans'
@@ -60,12 +62,12 @@ app.listen(3000, async () => {
             token = item.token.S
           } 
 
-          if (jobId) {
-            const oldJob = await scanQueue.getJob(jobId.S)
-            if (oldJob) {
-              await oldJob.remove()
-            }
-          }
+          // if (jobId) {
+          //   const oldJob = await scanQueue.getJob(jobId.S)
+          //   if (oldJob) {
+          //     await oldJob.remove()
+          //   }
+          // }
 
           console.log(`Resuming scan for ${collectionSlug.S}`)
           const job = await scanQueue.add({
