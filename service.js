@@ -42,9 +42,7 @@ scanQueue.process(1, (job, done) => {
   });
 });
 
-app.listen(3000, async () => {
-  console.log('Server started on port 3000')
-
+const startup = async () => {
   scanQueue.obliterate({ force: true })
 
   try {
@@ -65,13 +63,13 @@ app.listen(3000, async () => {
         console.log(`Resuming scan for ${collectionSlug.S}`)
         const job = await scanQueue.add(
           collectionSlug.S,
-        {
-          collectionSlug: collectionSlug.S,
-          margin: margin.N,
-          increment: increment.N,
-          schema: schema.S,
-          token
-        }, {
+          {
+            collectionSlug: collectionSlug.S,
+            margin: margin.N,
+            increment: increment.N,
+            schema: schema.S,
+            token
+          }, {
           jobId: uuidv4(),
           repeat: {
             every: 1.5 * 60 * 1000
@@ -112,4 +110,9 @@ app.listen(3000, async () => {
   } catch (err) {
     console.error(`Error resuming scans: ${err}`)
   }
+}
+
+app.listen(3000, async () => {
+  console.log('Server started on port 3000')
+  await startup()
 })

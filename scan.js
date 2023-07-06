@@ -59,7 +59,7 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            const { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug);
+            const { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, schema, token);
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);

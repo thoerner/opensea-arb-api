@@ -1,7 +1,7 @@
 import { postRequest, getRequest, genSalt } from '../utils.js'
 import config from '../config.js'
 
-const {apiV1Url, apiV2Url, sigTypes, offerer, wethAddress, conduitKey, protocolAddress, seaportContractAddress, domain } = config
+const { apiV1Url, apiV2Url, sigTypes, offerer, wethAddress, conduitKey, protocolAddress, seaportContractAddress, domain } = config
 
 
 
@@ -36,7 +36,7 @@ const extractFeesApi = (feesObject, priceWei) => {
 const getCriteriaFees = async (collectionSlug, priceWei) => {
     const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`)
     const feesObject = response.collection.fees
-    return extractFeesApi(feesObject, priceWei)    
+    return extractFeesApi(feesObject, priceWei)
 }
 
 const getCriteriaConsideration = async (criteriaFees, collectionSlug, priceWei) => {
@@ -224,40 +224,64 @@ const getNfts = async (slug) => {
     }
 }
 
-const getFloorAndOffer = async (slug) => {
+const retrieveListings = async (address, tokenId) => {
+    const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/listings?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=asc`)
+    return response.orders
+}
+
+const retrieveOffers = async (address, tokenId) => {
+    const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/offers?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=desc`)
+    return response.orders
+}
+
+const getFloorAndOffer = async (slug, schema, token) => {
     const offerParams = await getCollectionOffers(slug)
     const collectionName = offerParams.offers[0].criteria.collection.slug
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
-    const highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
-    const highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
     const collectionAddress = offerParams.offers[0].criteria.contract.address
-    
-    let listing_prices = []
-    
-    let listings
-    let next = null
-    
-    const getListings = async (next) => {
-        // console.log(slug, next)
-        listings = await getAllListings(slug, next)
-        for (let i = 0; i < listings.listings.length; i++) {
-            listing_prices.push(listings.listings[i].price.current.value / (10 ** 18))
-        }   
+
+    let highestOffer
+    let highestOfferer
+    let floorPrice
+
+    if (schema === 'ERC721') {
+        highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
+        highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
+
+        let listing_prices = []
+
+        let listings
+        let next = null
+
+        const getListings = async (next) => {
+            // console.log(slug, next)
+            listings = await getAllListings(slug, next)
+            for (let i = 0; i < listings.listings.length; i++) {
+                listing_prices.push(listings.listings[i].price.current.value / (10 ** 18))
+            }
+        }
+
+        await getListings('')
+
+        while (listings.next !== null && listings.next !== undefined) {
+            next = listings.next
+            await getListings(next)
+        }
+
+        const getLowestListing = () => {
+            return Math.min(...listing_prices)
+        }
+
+        floorPrice = getLowestListing()
+    } else if (schema === 'ERC1155') {
+        const offers = await retrieveOffers(collectionAddress, token)
+        highestOffer = offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18)
+        highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
+
+        const listings = await retrieveListings(collectionAddress, token)
+        floorPrice = listings.currentPrice / (10 ** 18)
     }
-    
-    await getListings('')
-    
-    while (listings.next !== null && listings.next !== undefined) {
-        next = listings.next
-        await getListings(next)
-    }
-    
-    const getLowestListing = () => {
-        return Math.min(...listing_prices)
-    }
-    
-    let floorPrice = getLowestListing()
-    
+
     return { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress }
 }
 
