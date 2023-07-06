@@ -156,5 +156,5 @@ async function main() {
 }
 
 
-console.log('Starting... looking for new offers...')
+console.log(`Starting scan for ${slug}...`)
 main().catch(error => console.error(error));
