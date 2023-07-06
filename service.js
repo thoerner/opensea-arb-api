@@ -85,7 +85,7 @@ const startup = async () => {
             increment: { N: increment.N },
             schema: { S: schema.S },
             jobId: { S: job.id },
-            token
+            token: { S: token}
           }
         } else if (schema.S === 'ERC721') {
           dbItem = {

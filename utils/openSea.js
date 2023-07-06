@@ -226,15 +226,18 @@ const getNfts = async (slug) => {
 
 const retrieveListings = async (address, tokenId) => {
     const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/listings?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=asc`)
+    console.log(JSON.stringify(response, null, 2))
     return response.orders
 }
 
 const retrieveOffers = async (address, tokenId) => {
     const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/offers?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=desc`)
+    console.log(JSON.stringify(response, null, 2))
     return response.orders
 }
 
 const getFloorAndOffer = async (slug, schema, token) => {
+    console.log('getFloorAndOffer', slug, schema, token)
     const offerParams = await getCollectionOffers(slug)
     const collectionName = offerParams.offers[0].criteria.collection.slug
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
@@ -243,6 +246,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
     let highestOffer
     let highestOfferer
     let floorPrice
+
 
     if (schema === 'ERC721') {
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
