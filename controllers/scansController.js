@@ -46,7 +46,7 @@ export const startScan = async (req, res) => {
   const jobOptions = {
     jobId: uuidv4(),
     repeat: {
-      every: 1.5 * 60 * 1000
+      every: 3 * 60 * 1000
     }
   }
 
@@ -111,7 +111,7 @@ export const stopScan = async (req, res) => {
   const job = await scanQueue.getJob(jobId);
 
   if (job) {
-    const res = await scanQueue.removeRepeatableByKey(`${collectionSlug}:::${1.5 * 60 * 1000}`)
+    const res = await scanQueue.removeRepeatableByKey(`${collectionSlug}:::${3 * 60 * 1000}`)
     console.log(`Removed job ${jobId} from queue with result ${JSON.stringify(res)}}`)
   }
 

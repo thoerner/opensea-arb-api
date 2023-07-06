@@ -23,24 +23,32 @@ app.use(helmet())
 app.use('/collectionInfo', collectionRoutes)
 app.use('/', scanRoutes)
 
-scanQueue.process(1, (job, done) => {
-  const { collectionSlug, margin, increment, schema, token } = job.data;
-
-  const worker = spawn('node', ['scan.js', collectionSlug, margin, increment, schema, token]);
-
-  worker.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
+const registerProcessor = (jobType) => {
+  scanQueue.process(jobType, 1, (job, done) => {
+    console.log('Starting scan...')
+    const { collectionSlug, margin, increment, schema, token } = job.data;
+  
+    const worker = spawn('node', ['scan.js', collectionSlug, margin, increment, schema, token]);
+  
+    worker.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+  
+    worker.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+  
+    worker.on('close', (code) => {
+      console.log(`${collectionSlug} scan completed with code: ${code}`);
+      done();
+    });
+  
+    worker.on('error', (err) => {
+      console.error(`${collectionSlug} scan errored with: ${err}`);
+      done(err);
+    });
   });
-
-  worker.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
-  });
-
-  worker.on('close', (code) => {
-    console.log(`${collectionSlug} scan completed with code: ${code}`);
-    done();
-  });
-});
+}
 
 const startup = async () => {
   scanQueue.obliterate({ force: true })
@@ -61,6 +69,9 @@ const startup = async () => {
         }
 
         console.log(`Resuming scan for ${collectionSlug.S}`)
+
+        registerProcessor(collectionSlug.S)
+        
         const job = await scanQueue.add(
           collectionSlug.S,
           {
@@ -72,7 +83,7 @@ const startup = async () => {
           }, {
           jobId: uuidv4(),
           repeat: {
-            every: 1.5 * 60 * 1000
+            every: 3 * 60 * 1000
           }
         });
 
@@ -107,6 +118,7 @@ const startup = async () => {
         jobs[collectionSlug.S] = job.id;
       }
     }
+    console.log(`Done resuming scans`)
   } catch (err) {
     console.error(`Error resuming scans: ${err}`)
   }
