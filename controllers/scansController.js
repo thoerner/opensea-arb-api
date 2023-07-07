@@ -1,8 +1,7 @@
 import { GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import Redis from 'ioredis'
-import { v4 as uuidv4 } from 'uuid'
 import { jobs } from '../jobs.js'
-import { scanQueue } from '../config/queue.js'
+import { scanQueue, registerProcessor, addJob } from '../config/queue.js'
 import { dbClient } from '../config/db.js'
 
 const redisClient = new Redis()
@@ -21,6 +20,7 @@ export const startScan = async (req, res) => {
   const increment = req.body.increment;
   const schema = req.body.schema;
   const token = req.body.token;
+  const interval = req.body.superblaster ? 12 * 1000 : 3 * 60 * 1000;
 
   const getCommand = new GetItemCommand({
     TableName: 'arb_anderson_scans',
@@ -43,23 +43,9 @@ export const startScan = async (req, res) => {
     }
   }
 
-  const jobOptions = {
-    jobId: uuidv4(),
-    repeat: {
-      every: 3 * 60 * 1000
-    }
-  }
+  registerProcessor(collectionSlug)
 
-  const queueOptions = {
-    collectionSlug,
-    margin,
-    increment,
-    schema,
-    token
-  }
-
-  // Schedule the job to run immediately and repeat every 3 minutes
-  const job = await scanQueue.add(collectionSlug, queueOptions, jobOptions);
+  const job = await addJob(collectionSlug, margin, increment, schema, token, interval)
 
   let item = {}
 
