@@ -27,10 +27,6 @@ export const registerProcessor = (jobType) => {
             console.error(`${collectionSlug} scan errored with: ${err}`);
             done(err);
         });
-
-        job.on('completed', async () => {
-
-        })
     });
 }
 
