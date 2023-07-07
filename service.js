@@ -7,7 +7,7 @@ import collectionRoutes from './routes/collections.js'
 import scanRoutes from './routes/scans.js'
 import { jobs } from './jobs.js'
 import { dbClient } from './config/db.js'
-import { scanQueue, registerProcessor, addJob } from './config/queue.js'
+import { scanQueue, registerProcessor, addJob, addRepeatableJob } from './config/queue.js'
 
 const INTERVAL = 3 * 60 * 1000
 
@@ -44,8 +44,8 @@ const startup = async () => {
         console.log(`Resuming scan for ${collectionSlug.S}`)
 
         registerProcessor(collectionSlug.S)
-        
-        const job = await addJob(collectionSlug, margin, increment, schema, token, INTERVAL)
+        await addJob(collectionSlug, margin, increment, schema, token)
+        const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, INTERVAL)
 
         let dbItem = {}
 

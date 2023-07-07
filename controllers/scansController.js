@@ -1,7 +1,7 @@
 import { GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import Redis from 'ioredis'
 import { jobs } from '../jobs.js'
-import { scanQueue, registerProcessor, addJob } from '../config/queue.js'
+import { scanQueue, registerProcessor, addJob, addRepeatableJob } from '../config/queue.js'
 import { dbClient } from '../config/db.js'
 
 const redisClient = new Redis()
@@ -45,7 +45,8 @@ export const startScan = async (req, res) => {
 
   registerProcessor(collectionSlug)
 
-  const job = await addJob(collectionSlug, margin, increment, schema, token, interval)
+  await addJob(collectionSlug, margin, increment, schema, token)
+  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, interval)
 
   let item = {}
 

@@ -226,18 +226,15 @@ const getNfts = async (slug) => {
 
 const retrieveListings = async (address, tokenId) => {
     const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/listings?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=asc`)
-    console.log(JSON.stringify(response, null, 2))
     return response.orders
 }
 
 const retrieveOffers = async (address, tokenId) => {
     const response = await getRequest(apiV2Url + `/orders/ethereum/seaport/offers?asset_contract_address=${address}&token_ids=${tokenId}&order_by=eth_price&order_direction=desc`)
-    console.log(JSON.stringify(response, null, 2))
     return response.orders
 }
 
 const getFloorAndOffer = async (slug, schema, token) => {
-    console.log('getFloorAndOffer', slug, schema, token)
     const offerParams = await getCollectionOffers(slug)
     const collectionName = offerParams.offers[0].criteria.collection.slug
     const quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
@@ -246,7 +243,6 @@ const getFloorAndOffer = async (slug, schema, token) => {
     let highestOffer
     let highestOfferer
     let floorPrice
-
 
     if (schema === 'ERC721') {
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
@@ -258,7 +254,6 @@ const getFloorAndOffer = async (slug, schema, token) => {
         let next = null
 
         const getListings = async (next) => {
-            // console.log(slug, next)
             listings = await getAllListings(slug, next)
             for (let i = 0; i < listings.listings.length; i++) {
                 listing_prices.push(listings.listings[i].price.current.value / (10 ** 18))
@@ -283,7 +278,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
-        floorPrice = listings.currentPrice / (10 ** 18)
+        floorPrice = (BigInt(listings.currentPrice) / (10n ** 18n)).toString()
     }
 
     return { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress }

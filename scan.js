@@ -59,7 +59,6 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            console.log(`Attempt ${attempt + 1} of ${maxAttempts}...`)
             const { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, schema, token);
 
             console.log(`Collection: ${collectionName}`);
