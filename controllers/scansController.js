@@ -1,18 +1,7 @@
 import { GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
-import Redis from 'ioredis'
 import { jobs } from '../jobs.js'
-import { scanQueue, registerProcessor, addJob, addRepeatableJob } from '../config/queue.js'
+import { addRepeatableJob, removeJobById } from '../config/queue.js'
 import { dbClient } from '../config/db.js'
-
-const redisClient = new Redis()
-
-redisClient.on('error', (err) => {
-  console.log('Redis error: ', err)
-})
-
-redisClient.on('connect', () => {
-  console.log('Redis client connected')
-})
 
 export const startScan = async (req, res) => {
   const collectionSlug = req.body.collectionSlug;
@@ -43,9 +32,7 @@ export const startScan = async (req, res) => {
     }
   }
 
-  registerProcessor(collectionSlug)
-
-  await addJob(collectionSlug, margin, increment, schema, token)
+  // await addJob(collectionSlug, margin, increment, schema, token)
   const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, interval)
 
   let item = {}
@@ -94,14 +81,9 @@ export const stopScan = async (req, res) => {
     return
   }
 
-  const jobId = jobs[collectionSlug];
-  const job = await scanQueue.getJob(jobId);
-
-  if (job) {
-    const res = await scanQueue.removeRepeatableByKey(`${collectionSlug}:::${3 * 60 * 1000}`)
-    console.log(`Removed job ${jobId} from queue with result ${JSON.stringify(res)}}`)
-  }
-
+  await removeJobById(collectionSlug)
+  console.log(`Removed job ${collectionSlug} from queue`)
+  
   delete jobs[collectionSlug];
 
   const deleteCommand = new DeleteItemCommand({

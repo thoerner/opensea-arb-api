@@ -1,38 +1,46 @@
-import Queue from 'bull'
+import { Queue, Worker } from 'bullmq'
 import { spawn } from 'child_process'
-import { v4 as uuidv4 } from 'uuid'
+import { redisClient } from './redis.js'
 
-export const scanQueue = new Queue('scan', 'redis://127.0.0.1:6379')
+export const scanQueue = new Queue('scan', { connection: redisClient })
+scanQueue.obliterate({ force: true })
 
-export const registerProcessor = (jobType) => {
-    scanQueue.process(jobType, 1, (job, done) => {
-        const { collectionSlug, margin, increment, schema, token } = job.data;
+const worker = new Worker('scan', async (job) =>{
+    const { collectionSlug, margin, increment, schema, token } = job.data;
 
-        const worker = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token]);
+    return new Promise((resolve, reject) => {
+        const process = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token]);
 
-        worker.stdout.on('data', (data) => {
+        process.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
         });
 
-        worker.stderr.on('data', (data) => {
+        process.stderr.on('data', (data) => {
             console.error(`stderr: ${data}`);
         });
 
-        worker.on('close', (code) => {
-            console.log(`${collectionSlug} scan completed with code: ${code}`);
-            done();
-        });
-
-        worker.on('error', (err) => {
-            console.error(`${collectionSlug} scan errored with: ${err}`);
-            done(err);
+        process.on('close', (code) => {
+            if(code !== 0){
+                reject(new Error(`process exited with code ${code}`));
+            }else{
+                resolve();
+            }
         });
     });
-}
+
+}, { connection: redisClient });
+
+worker.on('completed', (job) => {
+    console.log(`Scan of ${job.data.collectionSlug} completed`);
+})
+
+worker.on('failed', (job, err) => {
+    console.log(`${job.data.collectionSlug} scan failed with ${err.message}`);
+})
 
 export const addRepeatableJob = async (collectionSlug, margin, increment, schema, token, interval) => {
     const job = await scanQueue.add(
-        collectionSlug.S,
+        'nft-scan',
         {
             collectionSlug: collectionSlug.S,
             margin: margin.N,
@@ -40,7 +48,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
             schema: schema.S,
             token
         }, {
-        jobId: uuidv4(),
+        jobId: collectionSlug.S,
         repeat: {
             every: interval
         }
@@ -52,7 +60,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
 export const addJob = async (collectionSlug, margin, increment, schema, token) => {
     console.log(`Adding job for ${collectionSlug.S}`)
     const job = await scanQueue.add(
-        collectionSlug.S,
+        'nft-scan',
         {
             collectionSlug: collectionSlug.S,
             margin: margin.N,
@@ -60,8 +68,20 @@ export const addJob = async (collectionSlug, margin, increment, schema, token) =
             schema: schema.S,
             token
         }, {
-        jobId: uuidv4(),
+        jobId: collectionSlug.S,
     });
 
     return job
+}
+
+const getRepeatableJobs = async () => {
+    const repeatableJobs = await myQueue.getRepeatableJobs()
+    return repeatableJobs
+}
+
+export const removeJobById = async (id) => {
+    const jobs = await getRepeatableJobs()
+    const key = jobs.find(job => job.id === id).key
+    console.log(key)
+    await myQueue.removeRepeatableByKey(key)
 }

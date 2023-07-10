@@ -278,7 +278,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
-        floorPrice = (BigInt(listings.currentPrice) / (10n ** 18n)).toString()
+        floorPrice = listings.currentPrice / 10 ** 18
     }
 
     return { highestOffer, floorPrice, highestOfferer, collectionName, collectionAddress }

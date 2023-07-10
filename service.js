@@ -7,7 +7,7 @@ import collectionRoutes from './routes/collections.js'
 import scanRoutes from './routes/scans.js'
 import { jobs } from './jobs.js'
 import { dbClient } from './config/db.js'
-import { scanQueue, registerProcessor, addJob, addRepeatableJob } from './config/queue.js'
+import { addRepeatableJob } from './config/queue.js'
 
 const INTERVAL = 3 * 60 * 1000
 
@@ -24,8 +24,6 @@ app.use('/collectionInfo', collectionRoutes)
 app.use('/', scanRoutes)
 
 const startup = async () => {
-  scanQueue.obliterate({ force: true })
-
   try {
     const command = new ScanCommand({
       TableName: 'arb_anderson_scans'
@@ -41,10 +39,9 @@ const startup = async () => {
           token = item.token.S
         }
 
-        console.log(`Resuming scan for ${collectionSlug.S}`)
+        console.log(`Adding ${collectionSlug.S} to scan queue`)
 
-        registerProcessor(collectionSlug.S)
-        await addJob(collectionSlug, margin, increment, schema, token)
+        // await addJob(collectionSlug, margin, increment, schema, token)
         const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, INTERVAL)
 
         let dbItem = {}
@@ -78,9 +75,9 @@ const startup = async () => {
         jobs[collectionSlug.S] = job.id;
       }
     }
-    console.log(`Done resuming scans`)
+    console.log(`Done adding scans to queue`)
   } catch (err) {
-    console.error(`Error resuming scans: ${err}`)
+    console.error(`Error adding scans to queue: ${err}`)
   }
 }
 
