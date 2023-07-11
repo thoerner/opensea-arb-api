@@ -83,5 +83,5 @@ export const removeJobById = async (id) => {
     const jobs = await getRepeatableJobs()
     const key = jobs.find(job => job.id === id).key
     console.log(key)
-    await myQueue.removeRepeatableByKey(key)
+    await scanQueue.removeRepeatableByKey(key)
 }
