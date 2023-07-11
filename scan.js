@@ -79,8 +79,6 @@ async function main() {
                 return;
             }
 
-            console.log(`Highest offerer: ${highestOfferer}`);
-
             if (highestOfferer === signer.address.toLowerCase()) {
                 console.log('You are the highest offerer. Not posting.');
                 return;
