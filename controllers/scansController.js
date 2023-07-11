@@ -8,7 +8,7 @@ export const startScan = async (req, res) => {
   const increment = req.body.increment
   const schema = req.body.schema
   const token = req.body.token || null
-  const superblaster = req.body.superblaster
+  const superblaster = req.body.superblaster || false
 
   const dbItem = await getItem(collectionSlug)
 
