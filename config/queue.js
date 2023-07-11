@@ -75,7 +75,7 @@ export const addJob = async (collectionSlug, margin, increment, schema, token) =
 }
 
 const getRepeatableJobs = async () => {
-    const repeatableJobs = await myQueue.getRepeatableJobs()
+    const repeatableJobs = await scanQueue.getRepeatableJobs()
     return repeatableJobs
 }
 
