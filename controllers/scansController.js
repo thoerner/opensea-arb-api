@@ -68,8 +68,8 @@ export const startScan = async (req, res) => {
 
   jobs[collectionSlug] = job.id;
 
-  console.log(`Started scanning collection ${collectionSlug}`)
-  res.send(`Started scanning collection ${collectionSlug}`)
+  console.log(`Added ${collectionSlug} to scan queue`)
+  res.send(`Added ${collectionSlug} to scan queue`)
   return
 }
 
