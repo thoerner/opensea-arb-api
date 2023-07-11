@@ -1,26 +1,18 @@
-import { GetItemCommand, DeleteItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb'
 import { jobs } from '../jobs.js'
 import { addRepeatableJob, removeJobById } from '../config/queue.js'
-import { dbClient } from '../config/db.js'
+import { getItem, putItem, deleteItem } from '../config/db.js'
 
 export const startScan = async (req, res) => {
-  const collectionSlug = req.body.collectionSlug;
-  const margin = req.body.margin;
-  const increment = req.body.increment;
-  const schema = req.body.schema;
-  const token = req.body.token;
-  const superblaster = req.body.superblaster;
+  const collectionSlug = req.body.collectionSlug
+  const margin = req.body.margin
+  const increment = req.body.increment
+  const schema = req.body.schema
+  const token = req.body.token || null
+  const superblaster = req.body.superblaster
 
-  const getCommand = new GetItemCommand({
-    TableName: 'arb_anderson_scans',
-    Key: {
-      slug: { S: collectionSlug }
-    }
-  });
+  const dbItem = await getItem(collectionSlug)
 
-  const response = await dbClient.send(getCommand)
-
-  if (response.Item) {
+  if (dbItem) {
     res.send(`Already scanning collection ${collectionSlug}`)
     return
   }
@@ -32,11 +24,9 @@ export const startScan = async (req, res) => {
     }
   }
 
-  // await addJob(collectionSlug, margin, increment, schema, token)
   const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
 
   let item = {}
-
   if (schema === 'ERC721') {
     item = {
       slug: { S: collectionSlug },
@@ -59,12 +49,11 @@ export const startScan = async (req, res) => {
     return
   }
 
-  const putCommand = new PutItemCommand({
-    TableName: 'arb_anderson_scans',
-    Item: item
-  });
-
-  await dbClient.send(putCommand)
+  const result = await putItem(item)
+  if (result.error) {
+    res.send(`Error adding ${collectionSlug} to database: ${result.error}`)
+    return
+  }
 
   jobs[collectionSlug] = job.id;
 
@@ -82,18 +71,8 @@ export const stopScan = async (req, res) => {
   }
 
   await removeJobById(collectionSlug)
-  console.log(`Removed job ${collectionSlug} from queue`)
-  
-  delete jobs[collectionSlug];
-
-  const deleteCommand = new DeleteItemCommand({
-    TableName: 'arb_anderson_scans',
-    Key: {
-      slug: { S: collectionSlug }
-    }
-  });
-
-  await dbClient.send(deleteCommand)
+  delete jobs[collectionSlug]
+  await deleteItem(collectionSlug)
 
   console.log(`Stopped scanning collection ${collectionSlug}`)
   res.send(`Stopped scanning collection ${collectionSlug}`)
@@ -101,8 +80,8 @@ export const stopScan = async (req, res) => {
 }
 
 export const getActiveScans = async (req, res) => {
-  const activeScans = Object.keys(jobs);
+  const activeScans = Object.keys(jobs)
   console.log(`Active scans: ${activeScans}`)
-  res.send(activeScans);
+  res.send(activeScans)
   return
 }

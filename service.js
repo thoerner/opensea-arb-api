@@ -2,11 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import bodyParser from 'body-parser'
-import { ScanCommand } from '@aws-sdk/client-dynamodb'
 import collectionRoutes from './routes/collections.js'
 import scanRoutes from './routes/scans.js'
 import { jobs } from './jobs.js'
-import { dbClient } from './config/db.js'
+import { getAllItems } from './config/db.js'
 import { addRepeatableJob } from './config/queue.js'
 
 const app = express()
@@ -23,14 +22,9 @@ app.use('/', scanRoutes)
 
 const startup = async () => {
   try {
-    const command = new ScanCommand({
-      TableName: 'arb_anderson_scans'
-    });
-
-    const data = await dbClient.send(command)
-
-    if (data.Items) {
-      for (let item of data.Items) {
+    const items = await getAllItems()
+    if (items) {
+      for (let item of items) {
         const { slug: collectionSlug, margin, increment, schema, superblaster } = item
         let token = null
         if (schema.S === 'ERC1155') {
@@ -39,7 +33,6 @@ const startup = async () => {
 
         console.log(`Adding ${collectionSlug.S} to scan queue`)
 
-        // await addJob(collectionSlug, margin, increment, schema, token)
         const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
 
         jobs[collectionSlug.S] = job.id;
