@@ -9,7 +9,7 @@ export const startScan = async (req, res) => {
   const increment = req.body.increment;
   const schema = req.body.schema;
   const token = req.body.token;
-  const interval = req.body.superblaster ? 12 * 1000 : 3 * 60 * 1000;
+  const superblaster = req.body.superblaster;
 
   const getCommand = new GetItemCommand({
     TableName: 'arb_anderson_scans',
@@ -33,7 +33,7 @@ export const startScan = async (req, res) => {
   }
 
   // await addJob(collectionSlug, margin, increment, schema, token)
-  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, interval)
+  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
 
   let item = {}
 
@@ -43,7 +43,7 @@ export const startScan = async (req, res) => {
       margin: { N: margin.toString() },
       increment: { N: increment.toString() },
       schema: { S: schema },
-      jobId: { S: job.id }
+      superblaster: { BOOL: superblaster }
     }
   } else if (schema === 'ERC1155') {
     item = {
@@ -51,8 +51,8 @@ export const startScan = async (req, res) => {
       margin: { N: margin.toString() },
       increment: { N: increment.toString() },
       schema: { S: schema },
-      jobId: { S: job.id },
-      token: { S: token }
+      token: { S: token },
+      superblaster: { BOOL: superblaster }
     }
   } else {
     res.send(`Invalid schema ${schema}`)

@@ -3,8 +3,6 @@ import config from '../config.js'
 
 const { apiV1Url, apiV2Url, sigTypes, offerer, wethAddress, conduitKey, protocolAddress, seaportContractAddress, domain } = config
 
-
-
 const getFee = (priceWei, feeBasisPoints, recipient) => {
     const fee = (priceWei * feeBasisPoints) / BigInt(10000)
     if (fee <= 0) {

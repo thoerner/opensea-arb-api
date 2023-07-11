@@ -38,9 +38,11 @@ worker.on('failed', (job, err) => {
     console.log(`${job.data.collectionSlug} scan failed with ${err.message}`);
 })
 
-export const addRepeatableJob = async (collectionSlug, margin, increment, schema, token, interval) => {
+export const addRepeatableJob = async (collectionSlug, margin, increment, schema, token, superblaster) => {
     let job
+    let interval
     if (collectionSlug.S) {
+        interval = superblaster.BOOL ? 30 * 1000 : 3 * 60 * 1000
         job = await scanQueue.add(
             'nft-scan',
             {
@@ -56,6 +58,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
             }
         });
     } else {
+        interval = superblaster ? 30 * 1000 : 3 * 60 * 1000
         job = await scanQueue.add(
             'nft-scan',
             {
@@ -71,23 +74,6 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
             }
         });
     }
-
-    return job
-}
-
-export const addJob = async (collectionSlug, margin, increment, schema, token) => {
-    console.log(`Adding job for ${collectionSlug.S}`)
-    const job = await scanQueue.add(
-        'nft-scan',
-        {
-            collectionSlug: collectionSlug.S,
-            margin: margin.N,
-            increment: increment.N,
-            schema: schema.S,
-            token
-        }, {
-        jobId: collectionSlug.S,
-    });
 
     return job
 }
