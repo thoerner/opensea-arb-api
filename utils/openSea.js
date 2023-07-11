@@ -275,7 +275,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
     } else if (schema === 'ERC1155') {
         const offers = await retrieveOffers(collectionAddress, token)
         highestOffer = offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18)
-        highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
+        highestOfferer = offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
         floorPrice = listings.currentPrice / 10 ** 18
