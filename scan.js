@@ -28,7 +28,7 @@ async function getWETHBalance() {
 const OFFER_EXPIRATION_SECONDS = 830
 
 const slug = process.argv[2]
-if (!slug) {
+if (!slug || slug === 'undefined') {
     console.error('No collection slug provided')
     process.exit(1)
 }
