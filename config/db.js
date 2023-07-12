@@ -19,7 +19,7 @@ export const getItem = async (slug, token) => {
         FilterExpression: 'slug = :slug AND token = :token',
         ExpressionAttributeValues: {
             ':slug': { S: slug },
-            ':token': { S: token }
+            ':token': { S: token.toString() }
         }
     });
 
