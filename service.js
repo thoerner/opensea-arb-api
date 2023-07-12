@@ -33,7 +33,7 @@ const startup = async () => {
 
         const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster)
 
-        jobs[`${slug.S}-${token}`] = job.id;
+        jobs[`${slug.S}-${token.S}`] = job.id;
       }
     }
     console.log(`Done adding scans to queue`)
