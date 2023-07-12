@@ -7,10 +7,10 @@ export const startScan = async (req, res) => {
   const margin = req.body.margin
   const increment = req.body.increment
   const schema = req.body.schema
-  const token = req.body.token || null
+  const token = req.body.token || 0
   const superblaster = req.body.superblaster || false
 
-  const dbItem = await getItem(collectionSlug)
+  const dbItem = await getItem(collectionSlug, token)
 
   if (dbItem) {
     res.send(`Already scanning collection ${collectionSlug}`)
@@ -18,7 +18,7 @@ export const startScan = async (req, res) => {
   }
 
   if (schema === 'ERC1155') {
-    if (!token) {
+    if (!req.body.token) {
       res.send(`No token provided for ERC1155 collection ${collectionSlug}`)
       return
     }
@@ -26,27 +26,13 @@ export const startScan = async (req, res) => {
 
   const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
 
-  let item = {}
-  if (schema === 'ERC721') {
-    item = {
-      slug: { S: collectionSlug },
-      margin: { N: margin.toString() },
-      increment: { N: increment.toString() },
-      schema: { S: schema },
-      superblaster: { BOOL: superblaster }
-    }
-  } else if (schema === 'ERC1155') {
-    item = {
+  const item = {
       slug: { S: collectionSlug },
       margin: { N: margin.toString() },
       increment: { N: increment.toString() },
       schema: { S: schema },
       token: { S: token },
       superblaster: { BOOL: superblaster }
-    }
-  } else {
-    res.send(`Invalid schema ${schema}`)
-    return
   }
 
   const result = await putItem(item)
@@ -55,7 +41,7 @@ export const startScan = async (req, res) => {
     return
   }
 
-  jobs[collectionSlug] = job.id;
+  jobs[`${collectionSlug}-${token}`] = job.id;
 
   console.log(`Added ${collectionSlug} to scan queue`)
   res.send(`Added ${collectionSlug} to scan queue`)
