@@ -27,17 +27,13 @@ const startup = async () => {
     const items = await getAllItems()
     if (items) {
       for (let item of items) {
-        const { slug: collectionSlug, margin, increment, schema, superblaster } = item
-        let token = null
-        if (schema.S === 'ERC1155') {
-          token = item.token.S
-        }
+        const { slug, margin, increment, schema, token, superblaster } = item
 
-        console.log(`Adding ${collectionSlug.S} to scan queue`)
+        console.log(`Adding ${slug.S} to scan queue`)
 
-        const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
+        const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster)
 
-        jobs[collectionSlug.S] = job.id;
+        jobs[`${slug.S}-${token}`] = job.id;
       }
     }
     console.log(`Done adding scans to queue`)
