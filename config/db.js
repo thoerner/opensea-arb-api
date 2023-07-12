@@ -16,10 +16,10 @@ export const getAllItems = async () => {
 export const getItem = async (slug, token) => {
     const command = new ScanCommand({
         TableName,
-        FilterExpression: 'slug = :slug AND token = :token',
+        FilterExpression: 'slug = :slug AND token = :tokenId',
         ExpressionAttributeValues: {
             ':slug': { S: slug },
-            ':token': { S: token.toString() }
+            ':tokenId': { S: token.toString() }
         }
     });
 
