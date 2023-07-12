@@ -7,7 +7,7 @@ export const startScan = async (req, res) => {
   const margin = req.body.margin
   const increment = req.body.increment
   const schema = req.body.schema
-  const token = req.body.token || 0
+  const token = req.body.token || '0'
   const superblaster = req.body.superblaster || false
 
   const dbItem = await getItem(collectionSlug, token)
@@ -31,7 +31,7 @@ export const startScan = async (req, res) => {
       margin: { N: margin.toString() },
       increment: { N: increment.toString() },
       schema: { S: schema },
-      token: { S: token },
+      token: { S: token.toString() },
       superblaster: { BOOL: superblaster }
   }
 
