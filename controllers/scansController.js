@@ -35,8 +35,6 @@ export const startScan = async (req, res) => {
       superblaster: { BOOL: superblaster }
   }
 
-  console.log(item)
-
   const result = await putItem(item)
   if (result.error) {
     res.send(`Error adding ${collectionSlug}-${token} to database: ${result.error}`)
