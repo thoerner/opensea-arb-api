@@ -16,16 +16,20 @@ export const getAllItems = async () => {
 export const getItem = async (slug, token) => {
     const command = new ScanCommand({
         TableName,
-        FilterExpression: 'slug = :slug AND token = :tokenId',
+        FilterExpression: 'slug = :slug AND #t = :token',
+        ExpressionAttributeNames: {
+            '#t': 'token',
+        },
         ExpressionAttributeValues: {
             ':slug': { S: slug },
-            ':tokenId': { S: token.toString() }
+            ':token': { S: token.toString() }
         }
     });
 
     const data = await dbClient.send(command)
     return data.Items[0]
 }
+
 
 export const putItem = async (item) => {
     const putCommand = new PutItemCommand({
