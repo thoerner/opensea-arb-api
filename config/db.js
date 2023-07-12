@@ -46,10 +46,13 @@ export const putItem = async (item) => {
     }
 }
 
-export const deleteItem = async (slug) => {
+export const deleteItem = async (slug, token) => {
     const deleteCommand = new DeleteItemCommand({
         TableName,
-        Key: { slug: { S: slug } }
+        Key: {
+            slug: { S: slug },
+            token: { S: token.toString() }
+        }
     })
 
     try {

@@ -37,31 +37,32 @@ export const startScan = async (req, res) => {
 
   const result = await putItem(item)
   if (result.error) {
-    res.send(`Error adding ${collectionSlug} to database: ${result.error}`)
+    res.send(`Error adding ${collectionSlug}-${token} to database: ${result.error}`)
     return
   }
 
   jobs[`${collectionSlug}-${token}`] = job.id;
 
-  console.log(`Added ${collectionSlug} to scan queue`)
-  res.send(`Added ${collectionSlug} to scan queue`)
+  console.log(`Added ${collectionSlug}-${token} to scan queue`)
+  res.send(`Added ${collectionSlug}-${token} to scan queue`)
   return
 }
 
 export const stopScan = async (req, res) => {
   const collectionSlug = req.body.collectionSlug
+  const token = req.body.token || '0'
 
-  if (!jobs[collectionSlug]) {
-    res.send(`Not scanning collection ${collectionSlug}`)
+  if (!jobs[`${collectionSlug}-${token}`]) {
+    res.send(`Not scanning collection ${collectionSlug}-${token}`)
     return
   }
 
-  await removeJobById(collectionSlug)
-  delete jobs[collectionSlug]
-  await deleteItem(collectionSlug)
+  await removeJobById(`${collectionSlug}-${token}`)
+  delete jobs[`${collectionSlug}-${token}`]
+  await deleteItem(collectionSlug, token)
 
-  console.log(`Stopped scanning collection ${collectionSlug}`)
-  res.send(`Stopped scanning collection ${collectionSlug}`)
+  console.log(`Stopped scanning collection ${collectionSlug}-${token}`)
+  res.send(`Stopped scanning collection ${collectionSlug}-${token}`)
   return
 }
 
