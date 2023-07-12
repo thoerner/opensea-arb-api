@@ -49,8 +49,11 @@ export const startScan = async (req, res) => {
 }
 
 export const stopScan = async (req, res) => {
-  const collectionSlug = req.body.collectionSlug
-  const token = req.body.token || '0'
+  const slugWithToken = req.body.collectionSlug
+  const token = slugWithToken.substring(0, slugWithToken.lastIndexOf('-') !== -1 ? slugWithToken.lastIndexOf('-') : slugWithToken.length);
+
+  const collectionSlug = slugWithToken.substring(slugWithToken.lastIndexOf('-') !== -1 ? slugWithToken.lastIndexOf('-') + 1 : 0, slugWithToken.length);
+
 
   if (!jobs[`${collectionSlug}-${token}`]) {
     res.send(`Not scanning collection ${collectionSlug}-${token}`)
