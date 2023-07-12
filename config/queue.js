@@ -50,9 +50,9 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
                 margin: margin.N,
                 increment: increment.N,
                 schema: schema.S,
-                token
+                token: token.S
             }, {
-            jobId: collectionSlug.S,
+            jobId: `${collectionSlug.S}-${token.S}`,
             repeat: {
                 every: interval
             }
@@ -68,7 +68,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
                 schema,
                 token
             }, {
-            jobId: collectionSlug,
+            jobId: `${collectionSlug}-${token}`,
             repeat: {
                 every: interval
             }
