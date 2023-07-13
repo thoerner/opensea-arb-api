@@ -9,17 +9,17 @@ const worker = new Worker('scan', async (job) => {
     const { collectionSlug, margin, increment, schema, token } = job.data;
 
     return new Promise((resolve, reject) => {
-        const process = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token]);
+        const child = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token]);
 
-        process.stdout.on('data', (data) => {
+        child.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
         });
 
-        process.stderr.on('data', (data) => {
+        child.stderr.on('data', (data) => {
             console.error(`stderr: ${data}`);
         });
 
-        process.on('close', (code) => {
+        child.on('close', (code) => {
             if (code !== 0) {
                 reject(new Error(`process exited with code ${code}`));
             } else {
@@ -42,7 +42,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
     let job
     let interval
     if (collectionSlug.S) {
-        interval = superblaster.BOOL ? 30 * 1000 : 3 * 60 * 1000
+        interval = superblaster.BOOL ? 30 * 1000 : 3 * 60 * 1000 // 30 seconds for superblaster, 3 minutes for everyone else
         job = await scanQueue.add(
             'nft-scan',
             {
@@ -58,7 +58,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
             }
         });
     } else {
-        interval = superblaster ? 30 * 1000 : 3 * 60 * 1000
+        interval = superblaster ? 30 * 1000 : 3 * 60 * 1000 // 30 seconds for superblaster, 3 minutes for everyone else
         job = await scanQueue.add(
             'nft-scan',
             {
