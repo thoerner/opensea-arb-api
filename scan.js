@@ -67,17 +67,16 @@ async function main() {
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
             console.log(`Margin: ${margin}`);
-            console.log(`Bid Increment: ${increment}`);
 
             console.log(`highestOffer: ${highestOffer}`);
             console.log(`floorPrice: ${floorPrice}`);
 
             let wethBalance = await getWETHBalance();
 
-            const priceWei = getTrimmedPriceInWei(highestOffer, increment);
-            const price = ethers.BigNumber.from(priceWei) / 10 ** 18;
+            const offerWei = getTrimmedPriceInWei(highestOffer);
+            const offerAmount = ethers.BigNumber.from(offerWei) / 10 ** 18;
 
-            if (priceWei > wethBalance) {
+            if (offerWei > wethBalance) {
                 console.log('Not enough WETH to post offer.');
                 return;
             }
@@ -87,18 +86,18 @@ async function main() {
                 return;
             }
         
-            if (highestOffer * (1 + increment) > floorPrice * (1 - margin)) {
+            if (highestOffer + 0.0001 > floorPrice * (1 - margin)) {
                 console.log('Offer too close to floor. Not posting.');
                 return;
             }
             
             if (schema === 'ERC721') {
                 
-                console.log(`Building offer for ${price}...`);
+                console.log(`Building offer for ${offerAmount}...`);
                 const collectionOffer = await buildCollectionOffer({
                     collectionSlug: slug,
                     quantity: 1,
-                    priceWei: priceWei,
+                    priceWei: offerWei,
                     expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
                 });
 
@@ -122,12 +121,12 @@ async function main() {
                 return;
             } else if (schema === 'ERC1155') {
 
-                console.log(`Building offer for ${price}...`);
+                console.log(`Building offer for ${offerAmount}...`);
                 const itemOffer = await buildItemOffer({
                     assetContractAddress: collectionAddress,
                     tokenId: token,
                     quantity: 1,
-                    priceWei: priceWei,
+                    priceWei: offerWei,
                     expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
                 })
                 console.log(`Signing offer...`)
