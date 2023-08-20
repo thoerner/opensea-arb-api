@@ -89,3 +89,7 @@ export const removeJobById = async (id) => {
     console.log(key)
     await scanQueue.removeRepeatableByKey(key)
 }
+
+setInterval(async () => {
+    await scanQueue.clean(3600 * 1000, 'completed');
+}, 24 * 3600 * 1000); // clean completed jobs every 24 hours

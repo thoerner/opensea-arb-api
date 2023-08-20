@@ -5,8 +5,8 @@
   "main": "service.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node service.js"
+    "test": "mocha",
+    "start": "nodemon service.js"
   },
   "author": "",
   "license": "ISC",
@@ -26,6 +26,10 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "ethereumjs-wallet": "^1.0.2"
+    "chai": "^4.3.7",
+    "chai-http": "^4.4.0",
+    "ethereumjs-wallet": "^1.0.2",
+    "mocha": "^10.2.0",
+    "supertest": "^6.3.3"
   }
 }
