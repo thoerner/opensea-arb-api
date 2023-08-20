@@ -22,6 +22,10 @@ app.use(helmet())
 app.use('/collectionInfo', collectionRoutes)
 app.use('/', scanRoutes)
 
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
 const startup = async () => {
   try {
     const items = await getAllItems()
@@ -46,3 +50,5 @@ app.listen(PORT, async () => {
   console.log(`Server started on port ${PORT}`)
   await startup()
 })
+
+export default app
