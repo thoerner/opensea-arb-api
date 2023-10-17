@@ -69,6 +69,7 @@ async function main() {
 
             let floorPrice = stats.floor_price;
             if (isCollectionOffer === false && schema === "ERC1155") {
+                console.log('Using ERC1155 floor price');
                 floorPrice = erc1155FloorPrice;
             }
 
