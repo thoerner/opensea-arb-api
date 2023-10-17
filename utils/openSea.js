@@ -243,6 +243,7 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
     let quantity
 
     if (isCollectionOffer) {
+        console.log('getting collection offers and floor price')
         quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
@@ -272,6 +273,7 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
 
         floorPrice = getLowestListing()
     } else {
+        console.log('getting token offers and floor price')
         const offers = await retrieveOffers(collectionAddress, token)
         quantity = offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
