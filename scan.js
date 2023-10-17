@@ -68,14 +68,15 @@ async function main() {
             const { stats } = await getCollection(slug);
 
             let floorPrice = stats.floor_price;
-            if (isCollectionOffer === "false" && schema === "ERC1155") {
+            if (isCollectionOffer === false && schema === "ERC1155") {
                 console.log('Using ERC1155 floor price');
+                console.log(`ERC1155 floor price: ${erc1155FloorPrice}`)
                 floorPrice = erc1155FloorPrice;
             }
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
-            console.log(`Offer Type:${isCollectionOffer === "true" ? ' Collection' : ' Item'}`);
+            console.log(`Offer Type:${isCollectionOffer === true ? ' Collection' : ' Item'}`);
             console.log(`Margin: ${margin}`);
 
             console.log(`highestOffer: ${highestOffer}`);
