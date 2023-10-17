@@ -68,7 +68,7 @@ async function main() {
             const { stats } = await getCollection(slug);
 
             let floorPrice = stats.floor_price;
-            if (isCollectionOffer === true && schema === "ERC1155") {
+            if (isCollectionOffer === false && schema === "ERC1155") {
                 floorPrice = erc1155FloorPrice;
             }
 
