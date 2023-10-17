@@ -98,7 +98,7 @@ async function main() {
                 return;
             }
             
-            if (isCollectionOffer) {
+            if (isCollectionOffer === true) {
                 
                 console.log(`Building offer for ${offerAmount}...`);
                 const collectionOffer = await buildCollectionOffer({
