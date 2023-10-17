@@ -280,6 +280,7 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
         highestOfferer = offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
+        console.log(`listings: ${JSON.stringify(listings)}`)
         floorPrice = listings.currentPrice / 10 ** 18
     }
 
