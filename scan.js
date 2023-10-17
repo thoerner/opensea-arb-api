@@ -71,6 +71,7 @@ async function main() {
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
+            console.log(`Offer Type:${isCollectionOffer ? ' Collection' : ' Item'}`);
             console.log(`Margin: ${margin}`);
 
             console.log(`highestOffer: ${highestOffer}`);
