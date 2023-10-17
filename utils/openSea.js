@@ -283,6 +283,7 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
         // listings is an array of listings. check currentPrice of each listing and find the lowest
         let listing_prices = []
         for (let i = 0; i < listings.length; i++) {
+            console.log(listings[i].currentPrice)
             listing_prices.push(listings[i].currentPrice / (10 ** 18))
         }
 
