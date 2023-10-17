@@ -243,7 +243,6 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
     let quantity
 
     if (isCollectionOffer) {
-        console.log('getting collection offers and floor price')
         quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
@@ -279,10 +278,8 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
         highestOfferer = offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
-        // listings is an array of listings. check currentPrice of each listing and find the lowest
         let listing_prices = []
         for (let i = 0; i < listings.length; i++) {
-            console.log(listings[i].current_price)
             listing_prices.push(listings[i].current_price / (10 ** 18))
         }
         const getLowestListing = () => {
