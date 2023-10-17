@@ -10,6 +10,7 @@ export const startScan = async (req, res) => {
   const token = req.body.token || '0'
   const superblaster = req.body.superblaster
   const isCollectionOffer = req.body.isCollectionOffer
+  console.log(isCollectionOffer)
 
   const dbItem = await getItem(collectionSlug, token)
 
@@ -26,9 +27,6 @@ export const startScan = async (req, res) => {
   }
 
   const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer)
-
-  console.log('job data:')
-  console.log(job.data)
 
   const item = {
       slug: { S: collectionSlug },
