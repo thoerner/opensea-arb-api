@@ -280,13 +280,13 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
         highestOfferer = offers[0].protocol_data.parameters.offerer
 
         const listings = await retrieveListings(collectionAddress, token)
-        console.log(`listings: ${JSON.stringify(listings)}`)
-
         // listings is an array of listings. check currentPrice of each listing and find the lowest
         let listing_prices = []
         for (let i = 0; i < listings.length; i++) {
             listing_prices.push(listings[i].currentPrice / (10 ** 18))
         }
+
+        console.log(listing_prices)
 
         const getLowestListing = () => {
             return Math.min(...listing_prices)
