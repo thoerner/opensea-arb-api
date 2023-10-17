@@ -5,8 +5,8 @@ import { redisClient } from './redis.js'
 export const scanQueue = new Queue('scan', { connection: redisClient })
 scanQueue.obliterate({ force: true })
 
-const worker = new Worker('scan', async (job) => {
-    const { collectionSlug, margin, increment, schema, token, isCollectionOffer } = job.data;
+function spawnWorker (jobData) {
+    const { collectionSlug, margin, increment, schema, token, isCollectionOffer } = jobData;
 
     return new Promise((resolve, reject) => {
         const child = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token, isCollectionOffer]);
@@ -27,7 +27,10 @@ const worker = new Worker('scan', async (job) => {
             }
         });
     });
+}
 
+const worker = new Worker('scan', async (job) => {
+    return spawnWorker(job.data);
 }, { connection: redisClient });
 
 worker.on('completed', (job) => {
@@ -76,7 +79,7 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
             }
         });
     }
-
+    spawnWorker(job.data)
     return job
 }
 
