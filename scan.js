@@ -64,14 +64,16 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            const { highestOffer, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, token, isCollectionOffer);
+            const { highestOffer, floorPrice: erc1155FloorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, token, isCollectionOffer);
             const { stats } = await getCollection(slug);
 
-            const floorPrice = stats.floor_price;
+            let floorPrice = stats.floor_price;
+            if (isCollectionOffer === true && schema === "ERC1155") {
+                floorPrice = erc1155FloorPrice;
+            }
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
-            console.log('isCollectionOffer: ', isCollectionOffer);
             console.log(`Offer Type:${isCollectionOffer === true ? ' Collection' : ' Item'}`);
             console.log(`Margin: ${margin}`);
 
