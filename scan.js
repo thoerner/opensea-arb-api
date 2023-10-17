@@ -72,8 +72,6 @@ async function main() {
             let floorPrice = stats.floor_price;
             if (!isCollectionOffer) {
                 if (schema === "ERC1155") {
-                    console.log('Using ERC1155 floor price');
-                    console.log(`ERC1155 floor price: ${erc1155FloorPrice}`);
                     floorPrice = erc1155FloorPrice;
                 }
             }

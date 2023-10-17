@@ -34,7 +34,6 @@ const startup = async () => {
         let { slug, margin, increment, schema, token, superblaster, isCollectionOffer } = item
         
         if (!isCollectionOffer) {
-          console.log('collection offer not set, defaulting to false')
           isCollectionOffer = { BOOL: false }
         }
 
