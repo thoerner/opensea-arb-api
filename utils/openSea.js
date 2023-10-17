@@ -232,7 +232,7 @@ const retrieveOffers = async (address, tokenId) => {
     return response.orders
 }
 
-const getFloorAndOffer = async (slug, schema, token) => {
+const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
     const offerParams = await getCollectionOffers(slug)
     const collectionName = offerParams.offers[0].criteria.collection.slug
     const collectionAddress = offerParams.offers[0].criteria.contract.address
@@ -242,7 +242,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
     let floorPrice
     let quantity
 
-    if (schema === 'ERC721') {
+    if (isCollectionOffer) {
         quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer
@@ -271,7 +271,7 @@ const getFloorAndOffer = async (slug, schema, token) => {
         }
 
         floorPrice = getLowestListing()
-    } else if (schema === 'ERC1155') {
+    } else {
         const offers = await retrieveOffers(collectionAddress, token)
         quantity = offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity

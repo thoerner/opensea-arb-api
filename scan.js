@@ -64,7 +64,7 @@ async function main() {
 
     while(attempt < maxAttempts) {
         try {
-            const { highestOffer, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, schema, token);
+            const { highestOffer, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, token, isCollectionOffer);
             const { stats } = await getCollection(slug);
 
             const floorPrice = stats.floor_price;
