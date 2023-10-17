@@ -8,7 +8,7 @@ import { jobs } from './jobs.js'
 import { getAllItems } from './config/db.js'
 import { addRepeatableJob } from './config/queue.js'
 
-const PORT = 3005
+const PORT = 3000
 
 const app = express()
 app.use(cors({
