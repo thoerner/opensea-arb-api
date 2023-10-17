@@ -70,7 +70,7 @@ async function main() {
             let floorPrice = stats.floor_price;
             console.log(isCollectionOffer);
             console.log(schema);
-            if (isCollectionOffer === false) {
+            if (isCollectionOffer == false) {
                 console.log('Item offer')
                 if (schema === "ERC1155") {
                     console.log('Using ERC1155 floor price');
