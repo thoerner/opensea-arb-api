@@ -42,6 +42,9 @@ const startup = async () => {
 
         const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster, isCollectionOffer)
 
+        console.log('job data:')
+        console.log(job.data)
+
         jobs[`${slug.S}-${token.S}`] = job.id;
       }
     }
