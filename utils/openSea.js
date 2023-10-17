@@ -242,7 +242,7 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
     let floorPrice
     let quantity
 
-    if (isCollectionOffer === true) {
+    if (isCollectionOffer) {
         quantity = offerParams.offers[0].protocol_data.parameters.consideration[0].startAmount
         highestOffer = offerParams.offers[0].protocol_data.parameters.offer[0].startAmount / (10 ** 18) / quantity
         highestOfferer = offerParams.offers[0].protocol_data.parameters.offerer

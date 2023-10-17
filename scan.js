@@ -56,6 +56,8 @@ if (!token) {
 let isCollectionOffer = process.argv[7]
 if (!isCollectionOffer) {
     isCollectionOffer = false
+} else {
+    isCollectionOffer = isCollectionOffer === 'true'
 }
 
 async function main() {
@@ -68,10 +70,7 @@ async function main() {
             const { stats } = await getCollection(slug);
 
             let floorPrice = stats.floor_price;
-            console.log(isCollectionOffer);
-            console.log(schema);
-            if (isCollectionOffer === "false") {
-                console.log('Item offer')
+            if (!isCollectionOffer) {
                 if (schema === "ERC1155") {
                     console.log('Using ERC1155 floor price');
                     console.log(`ERC1155 floor price: ${erc1155FloorPrice}`);
@@ -107,7 +106,7 @@ async function main() {
                 return;
             }
             
-            if (isCollectionOffer === true) {
+            if (isCollectionOffer) {
                 
                 console.log(`Building offer for ${offerAmount}...`);
                 const collectionOffer = await buildCollectionOffer({
