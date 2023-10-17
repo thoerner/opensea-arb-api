@@ -8,6 +8,8 @@ import { jobs } from './jobs.js'
 import { getAllItems } from './config/db.js'
 import { addRepeatableJob } from './config/queue.js'
 
+const PORT = 3000
+
 const app = express()
 app.use(cors({
   origin: '*'
@@ -44,7 +46,7 @@ const startup = async () => {
   }
 }
 
-app.listen(3000, async () => {
-  console.log('Server started on port 3000')
+app.listen(PORT, async () => {
+  console.log(`Server started on port ${PORT}`)
   await startup()
 })
