@@ -27,6 +27,9 @@ export const startScan = async (req, res) => {
 
   const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer)
 
+  console.log('job data:')
+  console.log(job.data)
+
   const item = {
       slug: { S: collectionSlug },
       margin: { N: margin.toString() },
