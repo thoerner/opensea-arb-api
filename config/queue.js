@@ -6,10 +6,10 @@ export const scanQueue = new Queue('scan', { connection: redisClient })
 scanQueue.obliterate({ force: true })
 
 const worker = new Worker('scan', async (job) => {
-    const { collectionSlug, margin, increment, schema, token } = job.data;
+    const { collectionSlug, margin, increment, schema, token, isCollectionOffer } = job.data;
 
     return new Promise((resolve, reject) => {
-        const child = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token]);
+        const child = spawn('node', ['./scan.js', collectionSlug, margin, increment, schema, token, isCollectionOffer]);
 
         child.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
@@ -38,7 +38,7 @@ worker.on('failed', (job, err) => {
     console.log(`${job.data.collectionSlug} scan failed with ${err.message}`);
 })
 
-export const addRepeatableJob = async (collectionSlug, margin, increment, schema, token, superblaster) => {
+export const addRepeatableJob = async (collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer) => {
     let job
     let interval
     if (collectionSlug.S) {
@@ -50,7 +50,8 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
                 margin: margin.N,
                 increment: increment.N,
                 schema: schema.S,
-                token: token.S
+                token: token.S,
+                isCollectionOffer: isCollectionOffer.BOOL
             }, {
             jobId: `${collectionSlug.S}-${token.S}`,
             repeat: {
@@ -66,7 +67,8 @@ export const addRepeatableJob = async (collectionSlug, margin, increment, schema
                 margin,
                 increment,
                 schema,
-                token
+                token,
+                isCollectionOffer
             }, {
             jobId: `${collectionSlug}-${token}`,
             repeat: {

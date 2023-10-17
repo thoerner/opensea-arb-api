@@ -8,7 +8,7 @@ import { jobs } from './jobs.js'
 import { getAllItems } from './config/db.js'
 import { addRepeatableJob } from './config/queue.js'
 
-const PORT = 3000
+const PORT = 3005
 
 const app = express()
 app.use(cors({
@@ -31,11 +31,15 @@ const startup = async () => {
     const items = await getAllItems()
     if (items) {
       for (let item of items) {
-        const { slug, margin, increment, schema, token, superblaster } = item
+        let { slug, margin, increment, schema, token, superblaster, isCollectionOffer } = item
+        
+        if (!isCollectionOffer) {
+          isCollectionOffer = { BOOL: false }
+        }
 
         console.log(`Adding ${slug.S} to scan queue`)
 
-        const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster)
+        const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster, isCollectionOffer)
 
         jobs[`${slug.S}-${token.S}`] = job.id;
       }
@@ -50,5 +54,3 @@ app.listen(PORT, async () => {
   console.log(`Server started on port ${PORT}`)
   await startup()
 })
-
-export default app

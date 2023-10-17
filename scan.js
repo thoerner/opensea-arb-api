@@ -53,6 +53,11 @@ if (!token) {
     token = null
 }
 
+let isCollectionOffer = process.argv[7]
+if (!isCollectionOffer) {
+    isCollectionOffer = false
+}
+
 async function main() {
     const maxAttempts = 5; // Maximum number of attempts
     let attempt = 0;
@@ -91,7 +96,7 @@ async function main() {
                 return;
             }
             
-            if (schema === 'ERC721') {
+            if (isCollectionOffer) {
                 
                 console.log(`Building offer for ${offerAmount}...`);
                 const collectionOffer = await buildCollectionOffer({
@@ -119,7 +124,7 @@ async function main() {
                     `Collection offer posted! Order Hash: ${collectionResponse.order_hash}`,
                 );
                 return;
-            } else if (schema === 'ERC1155') {
+            } else {
 
                 console.log(`Building offer for ${offerAmount}...`);
                 const itemOffer = await buildItemOffer({
@@ -140,9 +145,6 @@ async function main() {
                 console.log(`Item offer posted! Order Hash: ${itemOrderHash}`);
                 return;
 
-            } else {
-                console.error('Invalid schema provided. Exiting...');
-                return;
             }
 
         } catch (error) {

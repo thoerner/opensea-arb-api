@@ -14,7 +14,7 @@ router.post('/start',
         body('margin').isNumeric(),
         body('increment').isNumeric(),
         body('schema').isString(),
-        body('token').isString().optional()
+        body('token').isString().optional(),
     ],
     startScan
 )

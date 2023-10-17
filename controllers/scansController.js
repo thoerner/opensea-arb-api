@@ -8,7 +8,8 @@ export const startScan = async (req, res) => {
   const increment = req.body.increment
   const schema = req.body.schema
   const token = req.body.token || '0'
-  const superblaster = req.body.superblaster === 'on' ? true : false
+  const superblaster = req.body.superblaster
+  const isCollectionOffer = req.body.isCollectionOffer
 
   const dbItem = await getItem(collectionSlug, token)
 
@@ -18,13 +19,13 @@ export const startScan = async (req, res) => {
   }
 
   if (schema === 'ERC1155') {
-    if (!req.body.token) {
+    if (!req.body.token && !isCollectionOffer) {
       res.send(`No token provided for ERC1155 collection ${collectionSlug}`)
       return
     }
   }
 
-  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster)
+  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer)
 
   const item = {
       slug: { S: collectionSlug },
@@ -32,7 +33,8 @@ export const startScan = async (req, res) => {
       increment: { N: increment.toString() },
       schema: { S: schema },
       token: { S: token.toString() },
-      superblaster: { BOOL: superblaster }
+      superblaster: { BOOL: superblaster },
+      isCollectionOffer: { BOOL: isCollectionOffer }
   }
 
   const result = await putItem(item)
