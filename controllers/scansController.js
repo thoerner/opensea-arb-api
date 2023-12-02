@@ -10,7 +10,6 @@ export const startScan = async (req, res) => {
   const token = req.body.token || '0'
   const superblaster = req.body.superblaster
   const isCollectionOffer = req.body.isCollectionOffer
-  console.log(isCollectionOffer)
 
   const dbItem = await getItem(collectionSlug, token)
 
