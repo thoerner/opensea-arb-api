@@ -31,15 +31,23 @@ const startup = async () => {
     const items = await getAllItems()
     if (items) {
       for (let item of items) {
-        let { slug, margin, increment, schema, token, superblaster, isCollectionOffer } = item
+        let { slug, margin, increment, schema, token, superblaster, isCollectionOffer, isTraitOffer, trait } = item
         
         if (!isCollectionOffer) {
           isCollectionOffer = { BOOL: false }
         }
 
+        if (!isTraitOffer) {
+          isTraitOffer = { BOOL: false }
+        }
+
+        if (!trait) {
+          trait = { S: null }
+        }
+
         console.log(`Adding ${slug.S} to scan queue`)
 
-        const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster, isCollectionOffer)
+        const job = await addRepeatableJob(slug, margin, increment, schema, token, superblaster, isCollectionOffer, isTraitOffer, trait)
 
         console.log('job data:')
         console.log(job.data)

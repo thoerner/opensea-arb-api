@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import config from './config.js'
-import { buildCollectionOffer, buildItemOffer, postItemOffer, signOffer, postCriteriaOffer, getFloorAndOffer, getCollection } from './utils/openSea.js'
+import { buildCollectionOffer, buildTraitCollectionOffer, buildItemOffer, postItemOffer, signOffer, postCriteriaOffer, getFloorAndOffer, getCollection } from './utils/openSea.js'
 import { getTrimmedPriceInWei } from './utils.js'
 
 const { provider, privateKey } = config
@@ -60,6 +60,18 @@ if (!isCollectionOffer) {
     isCollectionOffer = isCollectionOffer === 'true'
 }
 
+let isTraitOffer = process.argv[8]
+if (!isTraitOffer) {
+    isTraitOffer = false
+} else {
+    isTraitOffer = isTraitOffer === 'true'
+}
+
+let trait = process.argv[9]
+if (!trait) {
+    trait = null
+}
+
 async function main() {
     const maxAttempts = 5; // Maximum number of attempts
     let attempt = 0;
@@ -78,7 +90,7 @@ async function main() {
 
             console.log(`Collection: ${collectionName}`);
             console.log(`Schema: ${schema}`);
-            console.log(`Offer Type:${isCollectionOffer === true ? ' Collection' : ' Item'}`);
+            console.log(`Offer Type:${isCollectionOffer === true ? ' Collection' : isTraitOffer === true? ' Trait' : ' Item'}`);
             console.log(`Margin: ${margin}`);
 
             console.log(`highestOffer: ${highestOffer}`);
@@ -104,7 +116,35 @@ async function main() {
                 return;
             }
             
-            if (isCollectionOffer) {
+            if (isTraitOffer) {
+                console.log(`Building offer for ${offerAmount}...`);
+                const traitOffer = await buildTraitCollectionOffer({
+                    collectionSlug: slug,
+                    quantity: 1,
+                    priceWei: offerWei,
+                    expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
+                    trait: trait,
+                });
+
+                console.log(`Signing offer...`);
+                const traitSignature = await signOffer(signer, traitOffer);
+
+                console.log(`Posting offer...`);
+                const traitResponse = await postCriteriaOffer(
+                    slug,
+                    traitOffer,
+                    traitSignature,
+                );
+
+                if (traitResponse.error) {
+                    throw new Error(`Error posting trait offer: ${JSON.stringify(traitResponse.error)}`);
+                }
+
+                console.log(
+                    `Trait offer posted! Order Hash: ${traitResponse.order_hash}`,
+                );
+                return;
+            } else if (isCollectionOffer) {
                 
                 console.log(`Building offer for ${offerAmount}...`);
                 const collectionOffer = await buildCollectionOffer({

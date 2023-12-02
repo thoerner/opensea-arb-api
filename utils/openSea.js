@@ -147,6 +147,20 @@ const buildOfferParams = async (slug, quantity) => {
     return postRequest(apiV2Url + `/offers/build`, buildPayload)
 }
 
+const buildTraitOfferParams = async (slug, quantity, trait) => {
+    const buildPayload = {
+        quantity,
+        offer_protection_enabled: true,
+        offerer,
+        criteria: { 
+            collection: { slug },
+            trait
+        },
+        protocol_address: protocolAddress
+    }
+    return postRequest(apiV2Url + `/offers/build`, buildPayload)
+}
+
 const buildCollectionOffer = async (offerSpecification) => {
 
     const { collectionSlug, quantity, priceWei, expirationSeconds } = offerSpecification
@@ -155,6 +169,39 @@ const buildCollectionOffer = async (offerSpecification) => {
     const startTime = now.toString()
     const endTime = (now + BigInt(expirationSeconds)).toString()
     const rawOfferParams = await buildOfferParams(collectionSlug, quantity)
+    const offerParams = rawOfferParams.partialParameters
+    const consideration = await getCriteriaConsideration(
+        offerParams.consideration,
+        collectionSlug,
+        priceWei,
+    )
+
+    const offer = {
+        offerer,
+        offer: getOffer(priceWei),
+        consideration,
+        startTime,
+        endTime,
+        orderType: 2,
+        zone: offerParams.zone,
+        zoneHash: offerParams.zoneHash,
+        salt: genSalt(38),
+        conduitKey,
+        totalOriginalConsiderationItems: consideration.length.toString(),
+        counter: 0,
+    }
+
+    return offer
+}
+
+const buildTraitCollectionOffer = async (offerSpecification) => {
+
+    const { collectionSlug, quantity, priceWei, expirationSeconds, trait } = offerSpecification
+
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const startTime = now.toString()
+    const endTime = (now + BigInt(expirationSeconds)).toString()
+    const rawOfferParams = await buildTraitOfferParams(collectionSlug, quantity, trait)
     const offerParams = rawOfferParams.partialParameters
     const consideration = await getCriteriaConsideration(
         offerParams.consideration,
@@ -304,6 +351,7 @@ const getCollection = async (slug) => {
 
 export {
     buildCollectionOffer,
+    buildTraitCollectionOffer,
     buildItemOffer,
     postItemOffer,
     signOffer,

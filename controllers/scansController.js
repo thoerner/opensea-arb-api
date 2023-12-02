@@ -10,6 +10,18 @@ export const startScan = async (req, res) => {
   const token = req.body.token || '0'
   const superblaster = req.body.superblaster
   const isCollectionOffer = req.body.isCollectionOffer
+  const isTraitOffer = req.body.isTraitOffer
+  const trait = req.body.trait
+
+  // trait is a json object with the following structure:
+  // {
+  //   "type": "Background",
+  //   "value": "Black"
+  // }
+  // Is this pulled from the request as a string? If so, we need to parse it into a JSON object.
+  // If it's already a JSON object, we can just use it as is.
+
+  const traitJson = JSON.parse(trait)
 
   const dbItem = await getItem(collectionSlug, token)
 
@@ -25,7 +37,7 @@ export const startScan = async (req, res) => {
     }
   }
 
-  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer)
+  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer, isTraitOffer, traitJson)
 
   const item = {
       slug: { S: collectionSlug },
@@ -34,7 +46,9 @@ export const startScan = async (req, res) => {
       schema: { S: schema },
       token: { S: token.toString() },
       superblaster: { BOOL: superblaster },
-      isCollectionOffer: { BOOL: isCollectionOffer }
+      isCollectionOffer: { BOOL: isCollectionOffer },
+      isTraitOffer: { BOOL: isTraitOffer },
+      trait: { S: trait },
   }
 
   const result = await putItem(item)
