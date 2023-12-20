@@ -45,7 +45,7 @@ if (!increment) {
 
 let schema = process.argv[5]
 if (!schema) {
-    schema = 'ERC721' // ERC721 schema default
+    schema = 'erc721' // ERC721 schema default
 }
 
 let token = process.argv[6]
@@ -83,7 +83,7 @@ async function main() {
 
             let floorPrice = stats.total.floor_price;
             if (!isCollectionOffer) {
-                if (schema === "ERC1155") {
+                if (schema === "erc1155") {
                     floorPrice = erc1155FloorPrice;
                 }
             }

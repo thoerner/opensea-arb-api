@@ -32,7 +32,7 @@ describe('Scan Routes', function () {
         collectionSlug: 'testSlug',
         margin: 0.3,
         increment: 0.01,
-        schema: 'ERC721',
+        schema: 'erc721',
         token: '0'
       })
       .expect(200)
