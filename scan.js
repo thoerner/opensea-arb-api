@@ -81,7 +81,7 @@ async function main() {
             const { highestOffer, floorPrice: erc1155FloorPrice, highestOfferer, collectionName, collectionAddress } = await getFloorAndOffer(slug, token, isCollectionOffer);
             const { stats } = await getCollection(slug);
 
-            let floorPrice = stats.floor_price;
+            let floorPrice = stats.total.floor_price;
             if (!isCollectionOffer) {
                 if (schema === "ERC1155") {
                     floorPrice = erc1155FloorPrice;
