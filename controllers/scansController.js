@@ -55,8 +55,6 @@ export const startScan = async (req, res) => {
       trait: { S: trait ? trait : ""},
   }
 
-  console.log(JSON.stringify(item))
-
   const result = await putItem(item)
   if (result.error) {
     res.send(`Error adding ${collectionSlug}-${token} to database: ${result.error}`)

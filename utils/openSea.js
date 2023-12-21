@@ -22,13 +22,11 @@ function multiplyBigIntByFloat(bigIntValue, floatValue) {
 
   // Multiply and then divide by the scale factor
   const result = (bigIntValue * BigInt(integerFloatValue)) / BigInt(scaleFactor);
-  console.log(`${bigIntValue} * ${integerFloatValue} / ${scaleFactor} = ${result}`);
   return result;
 }
 
 const getFee = (priceWei, feeBasisPoints, recipient) => {
   const fee = multiplyBigIntByFloat(priceWei, feeBasisPoints) / BigInt(100);
-  console.log(`fee: ${fee}`);
   if (fee <= 0) {
     return null;
   }
@@ -60,7 +58,6 @@ const getCriteriaFees = async (collectionSlug, priceWei) => {
     apiV2Url + `/collections/${collectionSlug}`
   );
   const feesObject = response.fees;
-  console.log(`feesObject: ${JSON.stringify(feesObject)}`);
   return extractFeesApi(feesObject, priceWei);
 };
 
@@ -207,7 +204,6 @@ const buildCollectionOffer = async (offerSpecification) => {
   const offerParams = rawOfferParams.partialParameters;
 
   const partialConsideration = offerParams.consideration;
-  console.log(`partialConsideration: ${JSON.stringify(partialConsideration)}`);
 
   const consideration = await getCriteriaConsideration(
     partialConsideration,
@@ -377,8 +373,6 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
 
     floorPrice = getLowestListing();
   } else {
-    console.log(`token: ${token}`);
-    console.log(`collectionAddress: ${collectionAddress}`);
     const offers = await retrieveOffers(collectionAddress, token);
     quantity = offers[0].protocol_data.parameters.consideration[0].startAmount;
     highestOffer =
