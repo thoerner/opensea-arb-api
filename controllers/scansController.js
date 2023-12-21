@@ -52,7 +52,7 @@ export const startScan = async (req, res) => {
       superblaster: { BOOL: superblaster },
       isCollectionOffer: { BOOL: isCollectionOffer },
       isTraitOffer: { BOOL: isTraitOffer },
-      trait: { S: trait },
+      trait: { S: trait ? trait : ""},
   }
 
   console.log(JSON.stringify(item))
