@@ -15,7 +15,7 @@ export const getCollectionInfo = async (req, res) => {
     }
     const { nfts, schema } = await getNfts(collectionSlug)
 
-    if (schema === 'ERC1155') {
+    if (schema === 'erc1155') {
         res.send({ name, traits, stats, schema, creatorFee, imageUrl, nfts })
         return
     } else {
