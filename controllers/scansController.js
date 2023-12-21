@@ -10,7 +10,7 @@ export const startScan = async (req, res) => {
   const token = req.body.token || '0'
   const superblaster = req.body.superblaster
   const isCollectionOffer = req.body.isCollectionOffer
-  const isTraitOffer = req.body.isTraitOffer
+  let isTraitOffer = req.body.isTraitOffer
   const trait = req.body.trait
 
   // trait is a json object with the following structure:
@@ -22,6 +22,12 @@ export const startScan = async (req, res) => {
   // If it's already a JSON object, we can just use it as is.
 
   const traitJson = trait ? JSON.parse(trait) : ""
+  
+  if (!isTraitOffer) {
+    isTraitOffer = false
+  } else {
+    isTraitOffer = isTraitOffer === 'true'
+  }
 
   const dbItem = await getItem(collectionSlug, token)
 
@@ -37,8 +43,6 @@ export const startScan = async (req, res) => {
     }
   }
 
-  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer, isTraitOffer, traitJson)
-
   const item = {
       slug: { S: collectionSlug },
       margin: { N: margin.toString() },
@@ -51,11 +55,15 @@ export const startScan = async (req, res) => {
       trait: { S: trait },
   }
 
+  console.log(JSON.stringify(item))
+
   const result = await putItem(item)
   if (result.error) {
     res.send(`Error adding ${collectionSlug}-${token} to database: ${result.error}`)
     return
   }
+
+  const job = await addRepeatableJob(collectionSlug, margin, increment, schema, token, superblaster, isCollectionOffer, isTraitOffer, traitJson)
 
   jobs[`${collectionSlug}-${token}`] = job.id;
 
