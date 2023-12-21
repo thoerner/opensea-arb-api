@@ -30,7 +30,7 @@ export const startScan = async (req, res) => {
     return
   }
 
-  if (schema === 'ERC1155') {
+  if (schema === 'erc1155') {
     if (!req.body.token && !isCollectionOffer) {
       res.send(`No token provided for ERC1155 collection ${collectionSlug}`)
       return
