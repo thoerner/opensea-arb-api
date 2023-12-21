@@ -8,7 +8,6 @@ export default {
     privateKey: process.env.PRIVATE_KEY,
     offerer: process.env.PUBLIC_ADDRESS,
     apiKey: process.env.API_KEY,
-    apiV1Url: 'https://api.opensea.io/api/v1',
     apiV2Url: 'https://api.opensea.io/v2',
     wethAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     conduitKey: '0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000',

@@ -65,7 +65,7 @@ export function genSalt(digits) {
 export function getTrimmedPriceInWei(price) {
     let priceWei = BigInt(Math.floor(price * (10 ** 18)));
     let priceWeiTrimmed = BigInt(Math.floor(Number(priceWei) / (10**14)) * (10**14));
-    const increment = BigInt(Math.round(0.0001 * (10 ** 18)));
-    priceWeiTrimmed += increment;
+    // const increment = BigInt(Math.round(0.0001 * (10 ** 18)));
+    // priceWeiTrimmed += increment;
     return priceWeiTrimmed;
 }

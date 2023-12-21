@@ -2,7 +2,6 @@ import { postRequest, getRequest, genSalt } from "../utils.js";
 import config from "../config.js";
 
 const {
-  apiV1Url,
   apiV2Url,
   sigTypes,
   offerer,
@@ -13,8 +12,23 @@ const {
   domain,
 } = config;
 
+function multiplyBigIntByFloat(bigIntValue, floatValue) {
+  // Determine the number of decimal places in the float
+  const decimalPlaces = (floatValue.toString().split('.')[1] || '').length;
+
+  // Convert the float to an integer
+  const scaleFactor = Math.pow(10, decimalPlaces);
+  const integerFloatValue = Math.round(floatValue * scaleFactor);
+
+  // Multiply and then divide by the scale factor
+  const result = (bigIntValue * BigInt(integerFloatValue)) / BigInt(scaleFactor);
+  console.log(`${bigIntValue} * ${integerFloatValue} / ${scaleFactor} = ${result}`);
+  return result;
+}
+
 const getFee = (priceWei, feeBasisPoints, recipient) => {
-  const fee = (priceWei * feeBasisPoints) / BigInt(10000);
+  const fee = multiplyBigIntByFloat(priceWei, feeBasisPoints) / BigInt(100);
+  console.log(`fee: ${fee}`);
   if (fee <= 0) {
     return null;
   }
@@ -28,22 +42,25 @@ const getFee = (priceWei, feeBasisPoints, recipient) => {
   };
 };
 
-const extractFeesApi = (feesObject, priceWei) => {
+const extractFeesApi = (feesArray, priceWei) => {
   const fees = [];
-  for (const [_category, categoryFees] of Object.entries(feesObject)) {
-    for (const [address, basisPoints] of Object.entries(categoryFees)) {
-      const fee = getFee(priceWei, BigInt(basisPoints), address);
-      if (fee) {
-        fees.push(fee);
-      }
+  for (let i = 0; i < feesArray.length; i++) {
+    const feeBasisPoints = feesArray[i].fee;
+    const address = feesArray[i].recipient;
+    const fee = getFee(priceWei, feeBasisPoints, address);
+    if (fee) {
+      fees.push(fee);
     }
   }
   return fees;
 };
 
 const getCriteriaFees = async (collectionSlug, priceWei) => {
-  const response = await getRequest(apiV1Url + `/collection/${collectionSlug}`);
-  const feesObject = response.collection.fees;
+  const response = await getRequest(
+    apiV2Url + `/collections/${collectionSlug}`
+  );
+  const feesObject = response.fees;
+  console.log(`feesObject: ${JSON.stringify(feesObject)}`);
   return extractFeesApi(feesObject, priceWei);
 };
 
@@ -86,23 +103,16 @@ const getItemTokenConsideration = async (
   };
 };
 
-const getItemFees = async (assetContractAddress, tokenId, priceWei) => {
-  const asset = await getRequest(
-    apiV1Url + `/asset/${assetContractAddress}/${tokenId}`
-  );
-  const feesObject = asset.collection.fees;
-  return extractFeesApi(feesObject, priceWei);
-};
-
 const getItemConsideration = async (
   assetContractAddress,
   tokenId,
   quantity,
-  priceWei
+  priceWei,
+  slug
 ) => {
   const fees = [
     await getItemTokenConsideration(assetContractAddress, tokenId, quantity),
-    ...(await getItemFees(assetContractAddress, tokenId, priceWei)),
+    ...(await getCriteriaFees(slug, priceWei)),
   ];
 
   return fees;
@@ -115,16 +125,19 @@ const buildItemOffer = async (offerSpecification) => {
     quantity,
     priceWei,
     expirationSeconds,
+    slug,
   } = offerSpecification;
 
   const now = BigInt(Math.floor(Date.now() / 1000));
   const startTime = now.toString();
   const endTime = (now + BigInt(expirationSeconds)).toString();
+
   const consideration = await getItemConsideration(
     assetContractAddress,
     tokenId,
     quantity,
-    priceWei
+    priceWei,
+    slug
   );
 
   const offer = {
@@ -192,8 +205,12 @@ const buildCollectionOffer = async (offerSpecification) => {
   const endTime = (now + BigInt(expirationSeconds)).toString();
   const rawOfferParams = await buildOfferParams(collectionSlug, quantity);
   const offerParams = rawOfferParams.partialParameters;
+
+  const partialConsideration = offerParams.consideration;
+  console.log(`partialConsideration: ${JSON.stringify(partialConsideration)}`);
+
   const consideration = await getCriteriaConsideration(
-    offerParams.consideration,
+    partialConsideration,
     collectionSlug,
     priceWei
   );
@@ -360,6 +377,8 @@ const getFloorAndOffer = async (slug, token, isCollectionOffer) => {
 
     floorPrice = getLowestListing();
   } else {
+    console.log(`token: ${token}`);
+    console.log(`collectionAddress: ${collectionAddress}`);
     const offers = await retrieveOffers(collectionAddress, token);
     quantity = offers[0].protocol_data.parameters.consideration[0].startAmount;
     highestOffer =

@@ -98,7 +98,7 @@ async function main() {
 
             let wethBalance = await getWETHBalance();
 
-            const offerWei = getTrimmedPriceInWei(highestOffer);
+            const offerWei = getTrimmedPriceInWei(highestOffer + 0.0001);
             const offerAmount = ethers.BigNumber.from(offerWei) / 10 ** 18;
 
             if (offerWei > wethBalance) {
@@ -181,6 +181,7 @@ async function main() {
                     quantity: 1,
                     priceWei: offerWei,
                     expirationSeconds: BigInt(OFFER_EXPIRATION_SECONDS),
+                    slug: slug,
                 })
                 console.log(`Signing offer...`)
                 const itemSignature = await signOffer(signer, itemOffer);
