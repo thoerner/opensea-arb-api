@@ -21,7 +21,7 @@ export const startScan = async (req, res) => {
   // Is this pulled from the request as a string? If so, we need to parse it into a JSON object.
   // If it's already a JSON object, we can just use it as is.
 
-  const traitJson = JSON.parse(trait)
+  const traitJson = trait ? JSON.parse(trait) : ""
 
   const dbItem = await getItem(collectionSlug, token)
 
